@@ -47,3 +47,19 @@ html{scroll-behavior:smooth}
 /* Bloom Shop styles */
 .bloom-nav{position:relative}.bloom-nav>.homebtn{display:flex;align-items:center;gap:7px;cursor:pointer}.bloom-menu{position:absolute;right:0;top:calc(100% + 10px);min-width:210px;z-index:200;background:#fffafd;border:1px solid #f1cddd;border-radius:15px;box-shadow:0 12px 28px #6b2f4d25;padding:7px}.bloom-menu a,.bloom-menu span{display:flex;align-items:center;gap:9px;padding:10px 12px;color:#8d4169;text-decoration:none;border-radius:9px}.bloom-menu a:hover{background:#fff0f6}.bloom-menu span{opacity:.55;cursor:not-allowed}.bloom-menu small{font-size:10px;margin-left:auto}
 .shop-shell{max-width:1060px;margin:0 auto;padding:20px 14px 60px}.shop-header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px}.shop-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.shop-btn{border:0;border-radius:12px;padding:10px 16px;background:#d9639d;color:white;font-weight:700;cursor:pointer}.shop-btn:disabled{opacity:.5;cursor:not-allowed}.shop-btn.secondary{background:#fff3fa;color:#9d4774;border:1px solid #eac4d6}.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:22px}.shop-card,.shop-panel{background:#fffafded;border:1px solid #f1d3e3;border-radius:18px;padding:17px;box-shadow:0 8px 25px #7d406016}.shop-card img{width:100%;height:170px;object-fit:cover;border-radius:12px}.shop-card h3{margin:10px 0 4px}.shop-muted{color:#9a7889;font-size:13px}.shop-form{display:grid;gap:10px;margin-top:14px}.shop-form input:not([type=checkbox]),.shop-form textarea,.shop-form select{width:100%;border:1px solid #e7c5d6;border-radius:10px;padding:10px;background:white;color:#67394f}.shop-form textarea{min-height:90px}.shop-modal-cover{position:fixed;inset:0;z-index:9998;display:grid;place-items:center;padding:18px;background:#3d1b316b;backdrop-filter:blur(9px)}.shop-modal{width:min(500px,100%);max-height:90dvh;overflow:auto}.shop-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.shop-ticket{border-top:1px solid #f0d9e5;padding:14px 0}.shop-ticket-messages{max-height:240px;overflow:auto;background:#fff3f9;border-radius:10px;padding:10px}.shop-ticket-messages p{margin:5px 0}.shop-error{color:#b51f54}
+
+/* Compact, consistent navigation; retain original background and guest greeting */
+.topbar{min-height:58px!important;padding:7px clamp(10px,2.2vw,24px)!important;gap:10px!important}
+.topbar .brand{font-family:ui-rounded,"Trebuchet MS",Arial,sans-serif!important;font-size:clamp(14px,1.35vw,18px)!important;font-weight:800!important;letter-spacing:-.45px!important;gap:7px!important;white-space:nowrap}
+.topbar .brand img{width:36px!important;height:36px!important;object-fit:contain}
+.topbar nav{gap:7px!important;align-items:center}
+.topbar nav .homebtn{padding:7px 10px!important;font-size:12px!important;gap:5px!important;min-height:34px!important}
+.topbar nav .homebtn svg{width:15px;height:15px}
+.topbar .searchwrap{max-width:340px;min-width:100px}
+.topbar .searchwrap input{font-size:12px!important;padding-top:8px!important;padding-bottom:8px!important}
+.topbar .avatarbutton{width:36px!important;height:36px!important;padding:2px!important}
+.topbar .avatarbutton img{width:32px!important;height:32px!important}
+.topbar .sb-notification-trigger{width:35px!important;height:35px!important}
+.topbar .sb-notification-trigger svg{width:18px;height:18px}
+.sb-pin-label{display:inline-flex;align-items:center;padding:4px 8px;border-radius:20px;background:#ffedf5;color:#a84275;font-size:11px;font-weight:700;white-space:nowrap}
+@media(max-width:650px){.topbar{gap:5px!important;padding:7px 8px!important}.topbar .brand{font-size:13px!important}.topbar .brand img{width:27px!important;height:27px!important}.topbar nav{gap:3px!important}.topbar nav .homebtn{padding:6px!important;font-size:11px!important}}
