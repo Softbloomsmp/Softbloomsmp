@@ -1,5 +1,5 @@
-import './reaction-picker.css';
 'use client';
+import './reaction-picker.css';
 import {useEffect,useState,useCallback,useRef} from 'react';
 import Link from 'next/link';
 import {createPortal} from 'react-dom';
