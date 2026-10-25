@@ -7,26 +7,30 @@ import {useAuth,Avatar} from '@/components/AppShell';
 import Link from 'next/link';
 
 type News={id:string;author_id:string;title:string;body:string;media_url:string|null;media_type:string|null;created_at:string;updated_at:string};
-type Comment={id:string;news_id:string;user_id:string;body:string;created_at:string};
+type Comment={id:string;news_id:string;user_id:string;body:string;created_at:string;parent_id:string|null};
+type CommentReaction={comment_id:string;user_id:string;emoji:string};
 type Reaction={news_id:string;user_id:string;emoji:string};
 const EMOJIS=['❤️','👍','🥰','😂','😮','😢','🌸'];
 export default function NewsPage(){
  const {user,profile}=useAuth();
+ const [picker,setPicker]=useState<string|null>(null),[replyTo,setReplyTo]=useState<string|null>(null),[commentReactions,setCommentReactions]=useState<CommentReaction[]>([]);
  const [composer,setComposer]=useState(false),[portalReady,setPortalReady]=useState(false);const fileRef=useRef<HTMLInputElement>(null);
  useEffect(()=>setPortalReady(true),[]);
+ useEffect(()=>{if(!picker)return;const dismiss=(e:PointerEvent)=>{if(!(e.target as HTMLElement).closest('.sb-reaction-wrap'))setPicker(null)};document.addEventListener('pointerdown',dismiss);return()=>document.removeEventListener('pointerdown',dismiss)},[picker]);
  const [admin,setAdmin]=useState(false),[news,setNews]=useState<News[]>([]),[comments,setComments]=useState<Comment[]>([]),[reactions,setReactions]=useState<Reaction[]>([]);
  const [names,setNames]=useState<Record<string,string>>({}),[avatars,setAvatars]=useState<Record<string,string|null>>({}),[title,setTitle]=useState(''),[body,setBody]=useState(''),[file,setFile]=useState<File|null>(null);
  const [editing,setEditing]=useState<string|null>(null),[commentDraft,setCommentDraft]=useState<Record<string,string>>({});
  const [busy,setBusy]=useState(false),[error,setError]=useState('');
  useEffect(()=>{if(!composer)return;const prev=document.body.style.overflow;document.body.style.overflow='hidden';const key=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!busy)setComposer(false)};window.addEventListener('keydown',key);return()=>{document.body.style.overflow=prev;window.removeEventListener('keydown',key)}},[composer,busy]);
  const load=useCallback(async()=>{
-  const [n,c,r]=await Promise.all([
+  const [n,c,r,cr]=await Promise.all([
    supabase.from('bloom_news').select('*').order('created_at',{ascending:false}).limit(100),
    supabase.from('bloom_news_comments').select('*').order('created_at',{ascending:true}).limit(1000),
-   supabase.from('bloom_news_reactions').select('*').limit(5000)
+   supabase.from('bloom_news_reactions').select('*').limit(5000),
+   supabase.from('bloom_news_comment_reactions').select('*').limit(10000)
   ]);
   if(n.error){setError(n.error.message);return}
-  setNews((n.data||[]) as News[]);setComments((c.data||[]) as Comment[]);setReactions((r.data||[]) as Reaction[]);
+  setNews((n.data||[]) as News[]);setComments((c.data||[]) as Comment[]);setReactions((r.data||[]) as Reaction[]);if(cr.error)setError(cr.error.message);else setCommentReactions((cr.data||[]) as CommentReaction[]);
   const ids=[...new Set([...(n.data||[]).map(x=>x.author_id),...(c.data||[]).map(x=>x.user_id)])];
   if(ids.length){const p=await supabase.from('profiles').select('id,username,avatar_url').in('id',ids);setNames(Object.fromEntries((p.data||[]).map(x=>[x.id,x.username])));setAvatars(Object.fromEntries((p.data||[]).map(x=>[x.id,x.avatar_url])))}
  },[]);
@@ -56,8 +60,25 @@ export default function NewsPage(){
  function startNew(){setEditing(null);setTitle('');setBody('');setFile(null);setError('');setComposer(true)}
  function chooseFile(f?:File){if(!f)return;const allowed=['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm'];if(!allowed.includes(f.type)||f.size>25*1024*1024){setError('Use JPG, PNG, WebP, GIF, MP4 or WebM, up to 25 MB.');return}setFile(f);setError('')}
  async function remove(id:string){if(!admin||!confirm('Delete this news post and its comments/reactions?'))return;setBusy(true);const r=await supabase.from('bloom_news').delete().eq('id',id);if(r.error)setError(r.error.message);else await load();setBusy(false)}
- async function comment(id:string){const text=(commentDraft[id]||'').trim();if(!user||!text)return;setBusy(true);const r=await supabase.from('bloom_news_comments').insert({news_id:id,user_id:user.id,body:text});if(r.error)setError(r.error.message);else{setCommentDraft(p=>({...p,[id]:''}));await load()}setBusy(false)}
+ async function comment(id:string,parentId?:string){const key=parentId||id;const value=(commentDraft[key]||'').trim();if(!user||!value)return;setBusy(true);const r=await supabase.from('bloom_news_comments').insert({news_id:id,user_id:user.id,body:value,...(parentId?{parent_id:parentId}:{})});if(r.error)setError(r.error.message);else{setCommentDraft(p=>({...p,[key]:''}));setReplyTo(null);await load()}setBusy(false)}
  async function react(id:string,emoji:string){if(!user)return;const old=reactions.find(r=>r.news_id===id&&r.user_id===user.id);const r=old?.emoji===emoji?await supabase.from('bloom_news_reactions').delete().eq('news_id',id).eq('user_id',user.id):await supabase.from('bloom_news_reactions').upsert({news_id:id,user_id:user.id,emoji},{onConflict:'news_id,user_id'});if(r.error)setError(r.error.message);else await load()}
+ async function reactComment(id:string,emoji:string){if(!user)return;const old=commentReactions.find(r=>r.comment_id===id&&r.user_id===user.id);const r=old?.emoji===emoji?await supabase.from('bloom_news_comment_reactions').delete().eq('comment_id',id).eq('user_id',user.id):await supabase.from('bloom_news_comment_reactions').upsert({comment_id:id,user_id:user.id,emoji},{onConflict:'comment_id,user_id'});if(r.error)setError(r.error.message);else await load();setPicker(null)}
+ function pickerButton(id:string,kind:'post'|'comment',selected:string|undefined,onPick:(emoji:string)=>void){
+  const key=`${kind}:${id}`;
+  return <span className="sb-reaction-wrap"><button type="button" className="sb-reaction-trigger" aria-label="Choose reaction" aria-expanded={picker===key} onClick={()=>setPicker(p=>p===key?null:key)}>{selected||'😊'} <span className="sb-reaction-label">React</span></button>{picker===key&&<span className="sb-reaction-popup" role="group" aria-label="Choose emoji reaction">{EMOJIS.map(e=><button key={e} type="button" title={e} aria-label={`React ${e}`} onClick={()=>onPick(e)}>{e}</button>)}</span>}</span>
+ }
+ function renderComment(c:Comment,depth:number,postId:string):React.ReactNode{
+  const children=comments.filter(child=>child.parent_id===c.id&&child.news_id===postId);
+  const selected=commentReactions.find(r=>r.comment_id===c.id&&r.user_id===user?.id)?.emoji;
+  return <div key={c.id} className={`sb-news-comment ${depth?'sb-news-reply':''}`} style={{marginLeft:depth?Math.min(depth,3)*16:0}}>
+   <div className="sb-news-comment-author"><Link href={`/profile/${c.user_id}`}><Avatar profile={{avatar_url:avatars[c.user_id]||null} as Parameters<typeof Avatar>[0]['profile']} size={30}/></Link><div><Link href={`/profile/${c.user_id}`}><strong>@{names[c.user_id]||'Member'}</strong></Link><span className="sb-news-meta"> · {new Date(c.created_at).toLocaleString()}</span></div></div>
+   <p className="sb-news-body">{c.body}</p>
+   <div className="sb-news-comment-controls">{pickerButton(c.id,'comment',selected,e=>void reactComment(c.id,e))}<button type="button" onClick={()=>setReplyTo(v=>v===c.id?null:c.id)}>Reply</button>{(admin||c.user_id===user?.id)&&<button type="button" onClick={async()=>{if(!confirm('Delete this comment and its replies?'))return;const r=await supabase.from('bloom_news_comments').delete().eq('id',c.id);if(r.error)setError(r.error.message);else await load()}}>Delete</button>}</div>
+   <div className="sb-news-reaction-counts">{EMOJIS.filter(e=>commentReactions.some(r=>r.comment_id===c.id&&r.emoji===e)).map(e=><span key={e}>{e} {commentReactions.filter(r=>r.comment_id===c.id&&r.emoji===e).length}</span>)}</div>
+   {replyTo===c.id&&<div className="sb-news-reply-input"><input aria-label={`Reply to ${names[c.user_id]||'member'}`} placeholder={`Reply to @${names[c.user_id]||'member'}...`} maxLength={2000} value={commentDraft[c.id]||''} onChange={e=>setCommentDraft(p=>({...p,[c.id]:e.target.value}))}/><button disabled={busy||!commentDraft[c.id]?.trim()} onClick={()=>void comment(postId,c.id)}><Send size={16}/></button></div>}
+   {children.map(child=>renderComment(child,depth+1,postId))}
+  </div>
+ }
  return <section className="sb-news-page">
   
   {error&&<p role="alert" className="sb-news-error">{error}</p>}
@@ -68,9 +89,9 @@ export default function NewsPage(){
    <p className="sb-news-body">{n.body}</p>
    {n.media_url&&(n.media_type==='video'?<video className="sb-news-media" src={n.media_url} controls preload="metadata"/>:<img className="sb-news-media" src={n.media_url} alt={`Media for ${n.title}`} loading="lazy"/>)}
    {admin&&<div className="sb-news-actions"><button onClick={()=>startEdit(n)}><Pencil size={14}/> Edit</button><button disabled={busy} onClick={()=>void remove(n.id)}><Trash2 size={14}/> Delete</button></div>}
-   <div className="sb-news-actions">{EMOJIS.map(e=><button key={e} type="button" onClick={()=>void react(n.id,e)} style={{fontWeight:reactions.some(r=>r.news_id===n.id&&r.user_id===user?.id&&r.emoji===e)?900:400}}>{e} {reactions.filter(r=>r.news_id===n.id&&r.emoji===e).length||''}</button>)}</div>
+   <div className="sb-news-post-reactions">{pickerButton(n.id,'post',reactions.find(r=>r.news_id===n.id&&r.user_id===user?.id)?.emoji,e=>{setPicker(null);void react(n.id,e)})}<div className="sb-news-reaction-counts">{EMOJIS.filter(e=>reactions.some(r=>r.news_id===n.id&&r.emoji===e)).map(e=><span key={e}>{e} {reactions.filter(r=>r.news_id===n.id&&r.emoji===e).length}</span>)}</div></div>
    <h3>Comments ({comments.filter(c=>c.news_id===n.id).length})</h3>
-   {comments.filter(c=>c.news_id===n.id).map(c=><div className="sb-news-comment" key={c.id}><strong>@{names[c.user_id]||'Member'}</strong> <span className="sb-news-meta">{new Date(c.created_at).toLocaleString()}</span><p className="sb-news-body">{c.body}</p>{(admin||c.user_id===user?.id)&&<div className="sb-news-actions"><button onClick={async()=>{if(!confirm('Delete this comment?'))return;const r=await supabase.from('bloom_news_comments').delete().eq('id',c.id);if(r.error)setError(r.error.message);else await load()}}>Delete comment</button></div>}</div>)}
+   {comments.filter(c=>c.news_id===n.id&&!c.parent_id).map(c=>renderComment(c,0,n.id))}
    <div style={{display:'flex',gap:8,marginTop:12}}><input aria-label="Write a comment" placeholder={`Comment as @${profile?.username||'member'}...`} maxLength={2000} value={commentDraft[n.id]||''} onChange={e=>setCommentDraft(p=>({...p,[n.id]:e.target.value}))}/><div className="sb-news-actions"><button disabled={busy||!commentDraft[n.id]?.trim()} onClick={()=>void comment(n.id)}><Send size={16}/></button></div></div>
   </article>)}
   {composer&&admin&&portalReady&&createPortal(

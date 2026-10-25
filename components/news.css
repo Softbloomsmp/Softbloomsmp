@@ -24,3 +24,25 @@
 .sb-news-author-details{display:grid;gap:3px;min-width:0}
 .sb-news-author-name{font-weight:750;color:#863d61;text-decoration:none;overflow-wrap:anywhere}
 .sb-news-author-name:hover{text-decoration:underline}
+
+
+/* News post and comment reaction picker */
+.sb-reaction-wrap{position:relative;display:inline-flex;align-items:center}
+.sb-reaction-trigger{border:1px solid #edc5d7;background:#fff6fa;border-radius:100px;padding:7px 12px;color:#864568;cursor:pointer;display:inline-flex;gap:6px;align-items:center;font-weight:600}
+.sb-reaction-trigger:hover{background:#ffe9f3}
+.sb-reaction-popup{position:absolute;bottom:calc(100% + 9px);left:0;z-index:30;display:flex;gap:3px;align-items:center;max-width:min(92vw,360px);padding:8px;background:white;border:1px solid #f2cddd;border-radius:40px;box-shadow:0 10px 32px #6e34532e;animation:sb-reaction-in .18s ease-out;transform-origin:bottom left}
+.sb-reaction-popup button{font-size:21px;border:0;border-radius:100%;padding:5px;background:transparent;cursor:pointer;transition:transform .16s ease,background .16s ease}
+.sb-reaction-popup button:hover,.sb-reaction-popup button:focus-visible{transform:translateY(-5px) scale(1.15);background:#ffedf6}
+@keyframes sb-reaction-in{from{opacity:0;transform:translateY(7px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+.sb-news-post-reactions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0}
+.sb-news-reaction-counts{display:flex;gap:8px;flex-wrap:wrap;color:#8c667a;font-size:12px}
+.sb-news-reaction-counts:empty{display:none}
+.sb-news-comment{position:relative;border-top:1px solid #f4dce7;padding:12px 0}
+.sb-news-reply{border-left:2px solid #f5d5e4;padding-left:10px}
+.sb-news-comment-author{display:flex;align-items:center;gap:8px}
+.sb-news-comment-author a{text-decoration:none;color:inherit}
+.sb-news-comment-controls{display:flex;gap:8px;align-items:center;margin:6px 0}
+.sb-news-comment-controls>button,.sb-news-reply-input button{border:0;background:transparent;color:#96536f;cursor:pointer;padding:6px}
+.sb-news-reply-input{display:flex;align-items:center;gap:6px;margin:8px 0}
+.sb-news-reply-input input{min-width:0;flex:1}
+@media(max-width:420px){.sb-reaction-popup{gap:0;padding:5px}.sb-reaction-popup button{font-size:18px;padding:4px}.sb-reaction-label{display:none}}
