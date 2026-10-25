@@ -63,3 +63,26 @@ html{scroll-behavior:smooth}
 .topbar .sb-notification-trigger svg{width:18px;height:18px}
 .sb-pin-label{display:inline-flex;align-items:center;padding:4px 8px;border-radius:20px;background:#ffedf5;color:#a84275;font-size:11px;font-weight:700;white-space:nowrap}
 @media(max-width:650px){.topbar{gap:5px!important;padding:7px 8px!important}.topbar .brand{font-size:13px!important}.topbar .brand img{width:27px!important;height:27px!important}.topbar nav{gap:3px!important}.topbar nav .homebtn{padding:6px!important;font-size:11px!important}}
+
+
+/* Slim navigation bar: preserve the existing design and all page styling */
+.topbar{
+  min-height:0!important;
+  height:52px!important;
+  padding:4px clamp(10px,2vw,24px)!important;
+  gap:10px!important;
+  flex-wrap:nowrap!important;
+}
+.topbar .brand img{width:31px!important;height:31px!important}
+.topbar .brand{font-size:15px!important}
+.topbar .searchwrap{height:36px!important;max-height:36px!important;min-height:0!important;flex-basis:auto!important;order:initial!important}
+.topbar .searchwrap input{height:36px!important;min-height:0!important;padding:5px 10px!important;font-size:12px!important}
+.topbar nav{height:38px!important;gap:6px!important;flex-wrap:nowrap!important}
+.topbar nav .homebtn{min-height:30px!important;padding:5px 8px!important;line-height:18px!important}
+.topbar .avatarbutton,.topbar .sb-notification-trigger{width:32px!important;height:32px!important;min-height:0!important}
+.topbar .avatarbutton img{width:28px!important;height:28px!important}
+@media(max-width:650px){
+  .topbar{height:auto!important;min-height:48px!important;flex-wrap:wrap!important;padding:5px 9px!important}
+  .topbar .searchwrap{order:3!important;flex-basis:100%!important;max-width:none!important}
+  .topbar nav{margin-left:auto}
+}
