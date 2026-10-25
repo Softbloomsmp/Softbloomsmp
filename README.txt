@@ -1,1 +1,1 @@
-Replace only app/news/page.tsx and components/news.css. Each post now has View Comments / Hide Comments and each comment with replies has View Replies / Hide Replies. All collapsed by default; counts and reaction controls retained. Existing SQL unchanged. Production build not run.
+Replace components/AppShell.tsx in GitHub. Removes Support Us from the Bloom dropdown. Shop and Our Wiki remain. Preserves News button, unread count, notification bell, and existing layout. No SQL changes.
