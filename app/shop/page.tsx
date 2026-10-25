@@ -1,5 +1,5 @@
 'use client';
-import {useCallback,useEffect,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
 import {ShoppingBag,Wallet,Ticket,ShieldCheck} from 'lucide-react';
 import {supabase} from '@/lib/supabase';
 import {useAuth} from '@/components/AppShell';
@@ -9,14 +9,49 @@ type Message={id:string;ticket_id:string;sender_id:string;body:string;created_at
 type Order={id:string;product_title:string;payment_method:string;status:string;created_at:string};
 export default function BloomShop(){
  const {user,login}=useAuth();const [admin,setAdmin]=useState(false),[products,setProducts]=useState<Product[]>([]),[tickets,setTickets]=useState<TicketRow[]>([]),[messages,setMessages]=useState<Message[]>([]),[orders,setOrders]=useState<Order[]>([]),[balance,setBalance]=useState(0),[error,setError]=useState(''),[busy,setBusy]=useState(false),[modal,setModal]=useState<'topup'|'product'|'checkout'|null>(null),[chosen,setChosen]=useState<Product|null>(null),[method,setMethod]=useState<'bcoins'|'gcash'>('bcoins'),[amount,setAmount]=useState('100'),[reference,setReference]=useState(''),[details,setDetails]=useState(''),[reply,setReply]=useState<Record<string,string>>({}),[editing,setEditing]=useState<string|null>(null),[title,setTitle]=useState(''),[description,setDescription]=useState(''),[image,setImage]=useState(''),[bprice,setBprice]=useState('100'),[gprice,setGprice]=useState('100'),[active,setActive]=useState(true);
+ const [imageFile,setImageFile]=useState<File|null>(null),[imagePreview,setImagePreview]=useState<string|null>(null);
+ const imageInput=useRef<HTMLInputElement>(null);
+ useEffect(()=>{if(!imageFile){setImagePreview(null);return}const url=URL.createObjectURL(imageFile);setImagePreview(url);return()=>URL.revokeObjectURL(url)},[imageFile]);
+ const allowedImages=new Set(['image/jpeg','image/png','image/gif','image/webp','image/avif','image/bmp']);
+ function selectImage(file?:File){if(!file)return;if(!allowedImages.has(file.type)){setError('Choose a JPG, PNG, GIF, WebP, AVIF, or BMP image. Videos are not supported.');return}if(file.size>8*1024*1024){setError('Image must be 8 MB or smaller.');return}setError('');setImageFile(file)}
  const load=useCallback(async()=>{if(!user)return;const [ar,pr,wr,tr,mr,or]=await Promise.all([
  supabase.rpc('bloom_is_admin'),supabase.from('bloom_products').select('*').order('created_at',{ascending:false}),supabase.from('bloom_wallets').select('balance').eq('user_id',user.id).maybeSingle(),supabase.from('bloom_tickets').select('*').order('created_at',{ascending:false}).limit(100),supabase.from('bloom_ticket_messages').select('*').order('created_at',{ascending:true}).limit(500),supabase.from('bloom_orders').select('*').order('created_at',{ascending:false}).limit(100)]);
  if(pr.error){setError(pr.error.message);return}setError('');setAdmin(ar.data===true);setProducts((pr.data||[]) as Product[]);setBalance(Number(wr.data?.balance||0));setTickets((tr.data||[]) as TicketRow[]);setMessages((mr.data||[]) as Message[]);setOrders((or.data||[]) as Order[]);
  },[user]);
  useEffect(()=>{void load()},[load]);
  async function run(name:string,args:Record<string,unknown>,done?:()=>void){setBusy(true);setError('');const {error}=await supabase.rpc(name,args);setBusy(false);if(error){setError(error.message);return}done?.();await load()}
- function editProduct(p?:Product){setEditing(p?.id||null);setTitle(p?.title||'');setDescription(p?.description||'');setImage(p?.image_url||'');setBprice(String(p?.price_bcoins||100));setGprice(String(p?.price_gcash||100));setActive(p?.active??true);setModal('product')}
- function saveProduct(){const b=Number(bprice),g=Number(gprice);if(!title.trim()||!Number.isSafeInteger(b)||b<=0||!Number.isFinite(g)||g<=0){setError('Enter a title and valid positive prices.');return}const args={p_title:title,p_description:description,p_image_url:image,p_bcoins:b,p_gcash:g,p_active:active};void run(editing?'bloom_set_product':'bloom_create_product',editing?{...args,p_id:editing}:args,()=>setModal(null))}
+ function editProduct(p?:Product){setEditing(p?.id||null);setTitle(p?.title||'');setDescription(p?.description||'');setImage(p?.image_url||'');setImageFile(null);if(imageInput.current)imageInput.current.value='';setBprice(String(p?.price_bcoins||100));setGprice(String(p?.price_gcash||100));setActive(p?.active??true);setModal('product')}
+ async function saveProduct(){
+  const b=Number(bprice),g=Number(gprice);
+  if(!title.trim()||!Number.isSafeInteger(b)||b<=0||!Number.isFinite(g)||g<=0){setError('Enter a title and valid positive prices.');return}
+  if(!user)return;
+  setBusy(true);setError('');
+  let imageUrl=image,uploadedPath:string|null=null;
+  if(imageFile){
+   const ext=({'image/jpeg':'jpg','image/png':'png','image/gif':'gif','image/webp':'webp','image/avif':'avif','image/bmp':'bmp'} as Record<string,string>)[imageFile.type];
+   if(!ext){setError('Unsupported image format.');setBusy(false);return}
+   uploadedPath=`products/${user.id}/${crypto.randomUUID()}.${ext}`;
+   const upload=await supabase.storage.from('bloom-product-images').upload(uploadedPath,imageFile,{contentType:imageFile.type,upsert:false,cacheControl:'3600'});
+   if(upload.error){setError(`Image upload failed: ${upload.error.message}`);setBusy(false);return}
+   imageUrl=supabase.storage.from('bloom-product-images').getPublicUrl(uploadedPath).data.publicUrl;
+  }
+  const args={p_title:title,p_description:description,p_image_url:imageUrl,p_bcoins:b,p_gcash:g,p_active:active};
+  const result=await supabase.rpc(editing?'bloom_set_product':'bloom_create_product',editing?{...args,p_id:editing}:args);
+  if(result.error){
+   if(uploadedPath)await supabase.storage.from('bloom-product-images').remove([uploadedPath]);
+   setError(`Product save failed: ${result.error.message}`);setBusy(false);return;
+  }
+  // Remove the replaced image only when it belongs to our dedicated product bucket.
+  if(editing&&uploadedPath&&image){
+   try{
+    const oldUrl=new URL(image);
+    const marker='/storage/v1/object/public/bloom-product-images/';
+    const idx=oldUrl.pathname.indexOf(marker);
+    if(idx!==-1){const oldPath=decodeURIComponent(oldUrl.pathname.slice(idx+marker.length));if(oldPath.startsWith('products/'))await supabase.storage.from('bloom-product-images').remove([oldPath])}
+   }catch{/* External image URL or invalid URL; do not delete. */}
+  }
+  setBusy(false);setImageFile(null);setModal(null);await load();
+ }
  function checkout(){if(!chosen)return;if(method==='bcoins'){if(!window.confirm(`Spend ${chosen.price_bcoins} BCoins on ${chosen.title}?`))return;void run('bloom_buy_bcoins',{p_product:chosen.id},()=>{setModal(null);window.alert('Purchase recorded! Your order is awaiting delivery.')})}else void run('bloom_open_ticket',{p_kind:'gcash_purchase',p_product:chosen.id,p_reference:reference,p_details:details},()=>{setModal(null);setReference('');setDetails('');window.alert('GCash purchase ticket created. Please follow the admin instructions in your ticket.')})}
  if(!user)return <div className="shop-shell shop-panel"><h1>Bloom Shop 🌸</h1><p>Sign in to explore the shop and manage your BCoins wallet.</p><button className="shop-btn" onClick={()=>void login('google')}>Sign in with Google</button> <button className="shop-btn secondary" onClick={()=>void login('discord')}>Discord</button></div>;
  return <div className="shop-shell"><div className="shop-header"><div><h1>🌸 Bloom Shop</h1><p className="shop-muted">Explore the community shop and manage your purchases.</p></div><div className="shop-actions"><strong className="shop-panel"><Wallet size={17} style={{verticalAlign:'middle'}}/> {balance.toLocaleString()} BCoins</strong><button className="shop-btn" onClick={()=>{setModal('topup');setReference('');setDetails('')}}>Top Up BCoins</button>{admin&&<button className="shop-btn secondary" onClick={()=>editProduct()}><ShieldCheck size={16}/> Add product</button>}</div></div>
@@ -27,6 +62,6 @@ export default function BloomShop(){
  {modal&&<div className="shop-modal-cover" onClick={()=>setModal(null)}><div className="shop-modal shop-panel" onClick={e=>e.stopPropagation()} role="dialog" aria-modal="true"><div className="shop-header"><h2>{modal==='topup'?'Top Up BCoins':modal==='product'?'Manage product':`Buy ${chosen?.title}`}</h2><button className="shop-btn secondary" onClick={()=>setModal(null)}>Close</button></div>
  {modal==='topup'&&<div className="shop-form"><p className="shop-muted">Request BCoins from admins. No coins are credited until an admin verifies your GCash payment and approves this ticket. Confirm the exchange rate with an admin before paying.</p><label>BCoins requested<input type="number" min="1" max="100000000" value={amount} onChange={e=>setAmount(e.target.value)}/></label><label>GCash reference (optional)<input value={reference} onChange={e=>setReference(e.target.value)}/></label><label>Message to admin<textarea value={details} onChange={e=>setDetails(e.target.value)}/></label><button className="shop-btn" disabled={busy||!Number.isSafeInteger(Number(amount))||Number(amount)<=0||Number(amount)>100000000} onClick={()=>void run('bloom_open_ticket',{p_kind:'topup',p_bcoins:Number(amount),p_reference:reference,p_details:details},()=>setModal(null))}>Create private top-up ticket</button></div>}
  {modal==='checkout'&&chosen&&<div className="shop-form"><label>Payment method<select value={method} onChange={e=>setMethod(e.target.value as 'bcoins'|'gcash')}><option value="bcoins">BCoins — {chosen.price_bcoins}</option><option value="gcash">GCash — ₱{Number(chosen.price_gcash).toFixed(2)}</option></select></label>{method==='bcoins'?<p>Current balance: {balance} BCoins. This purchase deducts coins immediately and creates a paid order.</p>:<><p className="shop-muted">A private admin ticket will be opened. Admins will provide GCash payment instructions and verify your payment manually. Do not send money until details are confirmed.</p><label>GCash reference (optional)<input value={reference} onChange={e=>setReference(e.target.value)}/></label><label>Message<textarea value={details} onChange={e=>setDetails(e.target.value)}/></label></>}<button className="shop-btn" disabled={busy||(method==='bcoins'&&balance<chosen.price_bcoins)} onClick={checkout}>{method==='bcoins'?'Confirm BCoins purchase':'Create GCash purchase ticket'}</button></div>}
- {modal==='product'&&<div className="shop-form"><label>Title<input maxLength={100} value={title} onChange={e=>setTitle(e.target.value)}/></label><label>Description<textarea value={description} onChange={e=>setDescription(e.target.value)}/></label><label>Image URL<input value={image} onChange={e=>setImage(e.target.value)}/></label><label>Price in BCoins<input type="number" min="1" value={bprice} onChange={e=>setBprice(e.target.value)}/></label><label>Price in PHP (GCash)<input type="number" min="0.01" step="0.01" value={gprice} onChange={e=>setGprice(e.target.value)}/></label><label><input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)}/> Published</label><button className="shop-btn" disabled={busy} onClick={saveProduct}>Save product</button></div>}
+ {modal==='product'&&<div className="shop-form"><label>Title<input maxLength={100} value={title} onChange={e=>setTitle(e.target.value)}/></label><label>Description<textarea value={description} onChange={e=>setDescription(e.target.value)}/></label><label>Product picture (JPG, PNG, GIF, WebP, AVIF, BMP — max 8 MB)<input ref={imageInput} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/bmp" onChange={e=>selectImage(e.target.files?.[0])}/></label>{(imagePreview||image)&&<div><p className="shop-muted">Image preview (animated GIFs remain animated)</p><img src={imagePreview||image} alt="Product preview" style={{width:'100%',maxHeight:230,objectFit:'contain',borderRadius:12}}/></div>}<label>Price in BCoins<input type="number" min="1" value={bprice} onChange={e=>setBprice(e.target.value)}/></label><label>Price in PHP (GCash)<input type="number" min="0.01" step="0.01" value={gprice} onChange={e=>setGprice(e.target.value)}/></label><label><input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)}/> Published</label><button className="shop-btn" disabled={busy} onClick={()=>void saveProduct()}>Save product</button></div>}
  </div></div>}</div>;
 }
