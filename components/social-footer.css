@@ -1,0 +1,9 @@
+/* SoftBloomSMP social links: scoped footer styling only */
+footer.softbloom-social-footer{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;padding:25px 16px 30px;text-align:center}
+.softbloom-social-links{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:9px}
+.softbloom-social-links a{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 13px;border:1px solid rgba(224,120,157,.28);border-radius:999px;background:rgba(255,255,255,.55);color:#9e476b;text-decoration:none;font-weight:600;font-size:13px;transition:transform .22s ease,background .22s ease,box-shadow .22s ease}
+.softbloom-social-links a:hover,.softbloom-social-links a:focus-visible{transform:translateY(-3px);background:rgba(255,241,247,.94);box-shadow:0 5px 16px rgba(177,87,123,.16)}
+.softbloom-social-links svg{flex-shrink:0}
+.softbloom-footer-credit{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap}
+@media(max-width:460px){.softbloom-social-links{gap:7px}.softbloom-social-links a{padding:8px 10px;font-size:12px}}
+@media(prefers-reduced-motion:reduce){.softbloom-social-links a{transition:none}.softbloom-social-links a:hover{transform:none}}
