@@ -35,3 +35,11 @@ html{scroll-behavior:smooth}
 @keyframes softbloom-breathe{50%{transform:scale(1.12);opacity:.65}}
 @keyframes softbloom-progress{from{transform:translateX(-100%)}to{transform:translateX(245%)}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.softbloom-page-enter,.dropdown,.searchresults,.softbloom-loading-flower,.softbloom-loading-bar::after{animation:none!important}:where(.brand,.homebtn,.searchwrap,.avatarbutton,.btn,.panel,.post,.composer-trigger,.react-btn,.list-user,.dropdown a,.dropdown button,.searchresults a,.field){transition:none!important}}
+
+/* Composer overlays are rendered into document.body, outside animated page wrappers. */
+.modal-backdrop{position:fixed;inset:0;inset:0 0 0 0;z-index:9999;display:grid;place-items:center;overflow-y:auto;overscroll-behavior:contain;padding:clamp(16px,4vh,40px) 16px;background:rgba(46,24,42,.48);backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px);animation:softbloom-overlay-in .18s ease-out both}
+.modal{position:relative;isolation:isolate;width:min(600px,100%);max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;margin:auto;border:1px solid rgba(255,255,255,.9);border-radius:24px;background:#fffafd;box-shadow:0 28px 80px rgba(44,20,47,.32);animation:softbloom-modal-in .22s cubic-bezier(.2,.7,.2,1) both}
+@keyframes softbloom-overlay-in{from{opacity:0}to{opacity:1}}
+@keyframes softbloom-modal-in{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-height:600px){.modal-backdrop{place-items:start center}.modal{margin:auto}}
+@media(prefers-reduced-motion:reduce){.modal,.modal-backdrop{animation:none!important}}

@@ -1,7 +1,1 @@
-SoftBloomSMP visual polish — updated files only
-
-Replace app/globals.css with the included file.
-Add app/template.tsx and app/loading.tsx.
-No other files need to be replaced. The existing login gate, blurred sunset, petals, feed, and messaging are retained.
-The Next.js route loader is shown when a navigation suspends; quick cached navigations may skip it. The page-enter animation is intentionally short.
-No database or Supabase changes required.
+Copy components/Feed.tsx and app/globals.css into the same paths in your SoftBloomSMP repository. The composer is portaled to document.body so page transition transforms cannot shift or clip its fixed overlay. Overlay blurs all content behind it, centers the composer, allows internal scrolling, locks background scroll, and closes on Escape. Existing post save logic remains unchanged. If your live files have changed since the previous patches, compare before replacing.
