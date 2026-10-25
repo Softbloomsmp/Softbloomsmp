@@ -51,7 +51,7 @@ for each row execute function public.guard_notification_update();
 -- A single SECURITY DEFINER trigger function generates events from verified rows.
 create or replace function public.emit_social_notification() returns trigger
 language plpgsql security definer set search_path='' as $$
-declare receiver uuid; owner_id uuid; parent_author uuid; event_kind text; pid uuid; cid uuid; mid uuid;
+declare receiver uuid; v_actor_id uuid; owner_id uuid; parent_author uuid; event_kind text; pid uuid; cid uuid; mid uuid;
 begin
  if tg_table_name='reactions' then
   if tg_op='DELETE' then
@@ -84,13 +84,21 @@ begin
   receiver:=new.recipient_id;mid:=new.id;event_kind:='message';
  elsif tg_table_name='follows' then
   receiver:=new.following_id;event_kind:='follow';
- else return new;end if;
- if receiver is not null and receiver<>case when tg_table_name='follows' then new.follower_id
- when tg_table_name='direct_messages' then new.sender_id else new.user_id end then
+ else
+  return new;
+ end if;
+
+ if tg_table_name='follows' then
+  v_actor_id:=new.follower_id;
+ elsif tg_table_name='direct_messages' then
+  v_actor_id:=new.sender_id;
+ else
+  v_actor_id:=new.user_id;
+ end if;
+
+ if receiver is not null and v_actor_id is not null and receiver<>v_actor_id then
   insert into public.notifications(recipient_id,actor_id,kind,post_id,post_owner_id,comment_id,message_id)
-  values(receiver,case when tg_table_name='follows' then new.follower_id
-   when tg_table_name='direct_messages' then new.sender_id else new.user_id end,
-   event_kind,pid,owner_id,cid,mid)
+  values(receiver,v_actor_id,event_kind,pid,owner_id,cid,mid)
   on conflict do nothing;
  end if;
  return new;
