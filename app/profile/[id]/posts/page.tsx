@@ -1,0 +1,1 @@
+'use client';import {useParams} from 'next/navigation';import Link from 'next/link';import {Feed} from '@/components/Feed';export default function UserPosts(){const {id}=useParams<{id:string}>();return <><Link className="btn outline" href={`/profile/${id}`} style={{marginBottom:18}}>← Back to Profile</Link><Feed onlyUser={id}/></>}

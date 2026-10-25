@@ -1,0 +1,25 @@
+'use client';
+import { useEffect,useState,useRef,createContext,useContext } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { Home,Search,UserRound,Settings,LogOut,LogIn,Flower2 } from 'lucide-react';
+import type { User } from '@supabase/supabase-js';
+import {supabase,Profile} from '@/lib/supabase';
+type AuthState={user:User|null;profile:Profile|null;refresh:()=>Promise<void>;login:(provider:'google'|'discord')=>Promise<void>};
+const AuthContext=createContext<AuthState>({user:null,profile:null,refresh:async()=>{},login:async()=>{}});
+export const useAuth=()=>useContext(AuthContext);
+export function AppShell({children}:{children:React.ReactNode}){
+ const [user,setUser]=useState<User|null>(null),[profile,setProfile]=useState<Profile|null>(null),[menu,setMenu]=useState(false),[search,setSearch]=useState(''),[results,setResults]=useState<Profile[]>([]),[focused,setFocused]=useState(false);
+ const router=useRouter(); const searchRef=useRef<HTMLDivElement>(null);
+ async function refresh(){const {data:{user:u}}=await supabase.auth.getUser();setUser(u);if(u){const {data}=await supabase.from('profiles').select('*').eq('id',u.id).maybeSingle();setProfile(data)}else setProfile(null)}
+ useEffect(()=>{void refresh();const {data:{subscription}}=supabase.auth.onAuthStateChange(()=>{setTimeout(()=>void refresh(),0)});return()=>subscription.unsubscribe()},[]);
+ useEffect(()=>{if(!search.trim()){setResults([]);return}const t=setTimeout(async()=>{const {data}=await supabase.from('profiles').select('id,username,avatar_url,bio,username_changed_at,created_at').ilike('username',`%${search.trim().replace(/[%_\\]/g,'')}%`).limit(8);setResults(data||[])},280);return()=>clearTimeout(t)},[search]);
+ async function login(provider:'google'|'discord'){await supabase.auth.signInWithOAuth({provider,options:{redirectTo:`${window.location.origin}/auth/callback`}})}
+ async function logout(){await supabase.auth.signOut();setMenu(false);router.push('/');router.refresh()}
+ return <AuthContext.Provider value={{user,profile,refresh,login}}><div className="scenery" aria-hidden="true"><div className="landscape"/><div className="petals">{Array.from({length:23},(_,i)=><span key={i} style={{left:`${(i*43+13)%100}%`,animationDelay:`-${i*1.7}s`,animationDuration:`${11+(i%8)*2}s`,fontSize:`${13+i%5*4}px`}}>🌸</span>)}</div></div>
+ <header className="topbar"><Link href="/" className="brand"><Image src="/softbloom-logo.png" width={48} height={48} alt="SoftBloomSMP logo"/><span>SoftBloomSMP</span></Link>
+ <div className="searchwrap" ref={searchRef}><Search size={19}/><input aria-label="Search usernames" value={search} onFocus={()=>setFocused(true)} onBlur={()=>setTimeout(()=>setFocused(false),170)} onChange={e=>setSearch(e.target.value)} placeholder="Search community members..."/>{focused&&search.trim()&&<div className="searchresults">{results.length?results.map(p=><Link key={p.id} href={`/profile/${p.id}`} onClick={()=>{setSearch('');setFocused(false)}}><Avatar profile={p}/><span>{p.username}</span></Link>):<p>No users found</p>}</div>}</div>
+ <nav><Link href="/" className="homebtn"><Home size={18}/><span>Home</span></Link><div className="account"><button className="avatarbutton" aria-label="Account menu" aria-expanded={menu} onClick={()=>setMenu(!menu)}><Avatar profile={profile}/></button>{menu&&<div className="dropdown">{user?<><div className="menu-user"><strong>{profile?.username||'Member'}</strong><small>Signed in</small></div><Link href={`/profile/${user.id}`} onClick={()=>setMenu(false)}><UserRound size={17}/>Go to Profile</Link><Link href="/settings" onClick={()=>setMenu(false)}><Settings size={17}/>Profile Settings</Link><button onClick={logout}><LogOut size={17}/>Logout</button></>:<><p>Welcome to SoftBloomSMP!</p><button onClick={()=>login('google')}><LogIn size={17}/>Sign Up with Google</button><button onClick={()=>login('discord')}><LogIn size={17}/>Sign Up with Discord</button></>}</div>}</div></nav></header>
+ <main className="main">{children}</main><footer>Made with <Flower2 size={14}/> for the SoftBloomSMP community</footer></AuthContext.Provider>}
+export function Avatar({profile,size=42}:{profile?:Profile|null;size?:number}){return profile?.avatar_url?<img className="avatar" src={profile.avatar_url} alt="Profile avatar" width={size} height={size} referrerPolicy="no-referrer"/>:<span className="avatar fallback" style={{width:size,height:size}}><UserRound size={size*.52}/></span>}

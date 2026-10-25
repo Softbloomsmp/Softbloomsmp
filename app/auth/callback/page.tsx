@@ -1,0 +1,3 @@
+'use client';
+import {useEffect} from 'react';import {useRouter} from 'next/navigation';import {supabase} from '@/lib/supabase';
+export default function Callback(){const router=useRouter();useEffect(()=>{const hash=new URLSearchParams(location.hash.slice(1));const code=new URLSearchParams(location.search).get('code');(async()=>{if(code)await supabase.auth.exchangeCodeForSession(code);else if(hash.get('access_token')&&hash.get('refresh_token'))await supabase.auth.setSession({access_token:hash.get('access_token')!,refresh_token:hash.get('refresh_token')!});router.replace('/')})()},[router]);return <div className="panel center">Completing sign in... 🌸</div>}
