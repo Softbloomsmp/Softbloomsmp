@@ -1,13 +1,13 @@
 'use client';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
-import {Bell,CheckCheck} from 'lucide-react';
+import {Bell,CheckCheck,Trash2} from 'lucide-react';
 import {supabase} from '@/lib/supabase';
 
 type Notice={id:string;actor_id:string;kind:string;post_id:string|null;post_owner_id:string|null;comment_id:string|null;created_at:string;read_at:string|null;actor?:{username:string;avatar_url:string|null}|null};
 const labels:Record<string,string>={post_reaction:'reacted to your post',comment:'commented on your post',reply:'replied to your comment',comment_reaction:'reacted to your comment',message:'sent you a message',follow:'started following you'};
 export function NotificationBell({userId}:{userId:string|null}){
- const [items,setItems]=useState<Notice[]>([]),[open,setOpen]=useState(false),[error,setError]=useState(''),[unread,setUnread]=useState(0);
+ const [items,setItems]=useState<Notice[]>([]),[open,setOpen]=useState(false),[error,setError]=useState(''),[unread,setUnread]=useState(0),[clearing,setClearing]=useState(false);
  const ref=useRef<HTMLDivElement>(null);
  const load=useCallback(async()=>{
   if(!userId){setItems([]);setUnread(0);return}
@@ -25,11 +25,20 @@ export function NotificationBell({userId}:{userId:string|null}){
  useEffect(()=>{const listener=(e:MouseEvent)=>{if(ref.current&&!ref.current.contains(e.target as Node))setOpen(false)};document.addEventListener('mousedown',listener);return()=>document.removeEventListener('mousedown',listener)},[]);
  async function mark(id:string){if(!userId)return;const {error}=await supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('id',id).eq('recipient_id',userId);if(!error){setItems(old=>old.map(n=>n.id===id?{...n,read_at:new Date().toISOString()}:n));setUnread(v=>Math.max(0,v-1))}else setError(error.message)}
  async function markAll(){if(!userId||!unread)return;const {error}=await supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('recipient_id',userId).is('read_at',null);if(error)setError(error.message);else{setItems(old=>old.map(n=>({...n,read_at:n.read_at||new Date().toISOString()})));setUnread(0)}}
+ async function clearAll(){
+  if(!userId||clearing||!items.length)return;
+  if(!window.confirm('Permanently clear all your notifications? This cannot be undone.'))return;
+  setClearing(true);setError('');
+  const {error}=await supabase.from('notifications').delete().eq('recipient_id',userId);
+  if(error){setError(`Could not clear notifications: ${error.message}`)}
+  else{setItems([]);setUnread(0);await load()}
+  setClearing(false);
+ }
  if(!userId)return null;
  return <div className="sb-notification" ref={ref}>
  <button className="sb-notification-trigger" type="button" aria-label={`Notifications, ${unread} unread`} aria-expanded={open} onClick={()=>{setOpen(v=>!v);void load()}}><Bell size={22}/>{unread>0&&<span className="sb-notification-count">{unread>99?'99+':unread}</span>}</button>
  {open&&<section className="sb-notification-panel" aria-label="Notifications">
- <div className="sb-notification-head"><strong>Notifications 🌸</strong><button type="button" onClick={()=>void markAll()} disabled={!unread} title="Mark all as read"><CheckCheck size={18}/> Mark all read</button></div>
+ <div className="sb-notification-head"><strong>Notifications 🌸</strong><div style={{display:"flex",gap:9,alignItems:"center",flexWrap:"wrap"}}><button type="button" onClick={()=>void markAll()} disabled={!unread||clearing} title="Mark all as read"><CheckCheck size={16}/> Mark read</button><button type="button" onClick={()=>void clearAll()} disabled={!items.length||clearing} title="Permanently clear all notifications"><Trash2 size={16}/> {clearing?"Clearing…":"Clear all"}</button></div></div>
  {error&&<p className="error">{error}</p>}
  {!items.length&&!error&&<p className="muted" style={{padding:18}}>No notifications yet.</p>}
  <div className="sb-notification-list">{items.map(n=><Link key={n.id} className={`sb-notification-item ${n.read_at?'':'unread'}`} href={n.kind==='message'?`/messages/${n.actor_id}`:n.kind==='follow'?`/profile/${n.actor_id}`:n.post_id?`/profile/${n.post_owner_id||n.actor_id}/posts?post=${n.post_id}${n.comment_id?`&comment=${n.comment_id}`:''}`:'/'} onClick={()=>{setOpen(false);void mark(n.id)}}>
