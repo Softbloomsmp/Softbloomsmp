@@ -1,13 +1,9 @@
-SoftBloomSMP — Clear All Notifications
-1. Run supabase/clear_notifications.sql in Supabase SQL Editor (once).
-2. Replace components/NotificationBell.tsx in GitHub.
-3. Redeploy on Vercel.
+SoftBloomSMP Admin Delete (archive) tickets and orders
 
-A Clear all action now appears next to Mark read in the notification dropdown.
-It asks for confirmation and permanently deletes only the signed-in user's notifications.
-The unread badge resets to zero after successful deletion. New events still produce notifications.
-The database policy prevents members from deleting other members' notifications.
-No other website files or styles are changed.
+1. Run supabase/bloom_archive_records.sql in Supabase SQL Editor once.
+2. Replace app/shop/page.tsx in GitHub.
+3. Deploy via Vercel.
 
-Note: the Clear all control is enabled when the most recent 80 notifications list contains items. The database delete itself clears ALL of the user's notifications, not just those 80.
-No full production build or live Supabase test was performed.
+Admin-only Delete buttons added to Admin ticket inbox and Recent orders. Confirmation required. Deletes archive records, keeping wallet ledger and payment history intact. Open/awaiting-payment tickets and pending orders must be resolved before archiving. Archived records disappear from the active shop lists for all users. No refunds or BCoins adjustments occur.
+
+Existing product image upload, GIF support, wallets and ticket replies are preserved. Production build/live DB test not run.
