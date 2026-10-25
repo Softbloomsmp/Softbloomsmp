@@ -1,1 +1,7 @@
-Copy components/Feed.tsx and app/globals.css into the same paths in your SoftBloomSMP repository. The composer is portaled to document.body so page transition transforms cannot shift or clip its fixed overlay. Overlay blurs all content behind it, centers the composer, allows internal scrolling, locks background scroll, and closes on Escape. Existing post save logic remains unchanged. If your live files have changed since the previous patches, compare before replacing.
+SoftBloomSMP Comment Replies & Reactions
+
+1. Run supabase/comment_replies_reactions.sql in Supabase SQL Editor once.
+2. Replace components/Feed.tsx in your GitHub repository.
+3. Deploy via Vercel and test replying/reacting using two accounts.
+
+Includes threaded replies, one emoji reaction per user per comment, change/remove reaction, and original comment editing/deleting. No other website files changed.
