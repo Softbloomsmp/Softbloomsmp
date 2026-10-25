@@ -1,0 +1,9 @@
+
+/* Compact reaction control for posts and threaded comments */
+.reaction-control{position:relative;display:inline-flex;align-items:center;flex-shrink:0}
+.reaction-trigger{display:inline-flex;align-items:center;gap:5px;min-width:44px;justify-content:center}
+.reaction-count{font-size:12px;font-weight:600}
+.reaction-picker{position:absolute;z-index:60;left:0;bottom:calc(100% + 9px);display:flex;gap:4px;align-items:center;padding:7px;border:1px solid #f0cddd;border-radius:18px;background:#fffafdee;box-shadow:0 9px 28px #7c365a30;backdrop-filter:blur(10px);max-width:min(90vw,340px)}
+.reaction-picker .react-btn{flex-shrink:0;transition:transform .16s ease}
+.reaction-picker .react-btn:hover{transform:scale(1.13)}
+@media(max-width:480px){.reaction-picker{gap:1px;padding:5px}.reaction-picker .react-btn{padding:5px}}

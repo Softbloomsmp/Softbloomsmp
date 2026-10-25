@@ -1,7 +1,2 @@
-SoftBloomSMP Comment Replies & Reactions
-
-1. Run supabase/comment_replies_reactions.sql in Supabase SQL Editor once.
-2. Replace components/Feed.tsx in your GitHub repository.
-3. Deploy via Vercel and test replying/reacting using two accounts.
-
-Includes threaded replies, one emoji reaction per user per comment, change/remove reaction, and original comment editing/deleting. No other website files changed.
+SoftBloomSMP compact reaction picker
+Replace components/Feed.tsx and add components/reaction-picker.css. No SQL changes required. Heart button opens the existing emoji options for both posts and comments; selected emoji and total count remain visible. Click a chosen reaction again to remove it.
