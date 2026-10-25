@@ -1,1 +1,1 @@
-Replace app/news/page.tsx only. News admin composer now uses same trigger and modal styling as Home feed; regular members cannot publish. Existing database RLS remains required. No SQL changes. Not production-build tested.
+Replace app/news/page.tsx only. Fixes busy variable declared after use and restores the missing Home-style create/edit modal. No SQL changes. ZIP verified; full Next.js production build not run.
