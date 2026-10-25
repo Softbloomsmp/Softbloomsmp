@@ -1,5 +1,11 @@
-SoftBloomSMP profile picture update
-1. Run supabase/profile_avatars.sql in the Supabase SQL Editor once.
-2. Replace app/settings/page.tsx in your GitHub repository.
-3. Redeploy on Vercel and test with two different accounts.
-Uploaded avatars are replaced by uploading the new file, updating the profile, then deleting the prior uploaded file. Google/Discord provider images are not deleted.
+SoftBloomSMP clickable profiles
+
+Replace files at the same relative paths in GitHub:
+components/Feed.tsx
+components/AppShell.tsx
+app/messages/[id]/page.tsx
+app/profile/[id]/page.tsx
+
+Post/comment author avatars and names already link to their profiles. This patch additionally links composer avatar/name, private-message header, profile header, and account-dropdown username. Search results, follower lists and message inbox rows already link to profiles. Top-right avatar remains an account-menu button; click its username to open the profile.
+
+No SQL required. Production build not run.
