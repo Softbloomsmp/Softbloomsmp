@@ -6,3 +6,32 @@
 
 /* Full-screen authentication gate: private content is not mounted for guests. */
 .guest-gate{position:relative;z-index:1;min-height:100dvh;display:grid;place-items:center;padding:32px 16px}.guest-card{width:min(850px,100%);padding:clamp(24px,5vw,52px);text-align:center;border-radius:28px;background:rgba(255,249,252,.89);border:1px solid rgba(255,255,255,.9);box-shadow:0 18px 65px #743b5952;backdrop-filter:blur(14px)}.guest-logo{display:block;width:min(100%,740px);height:auto;margin:0 auto 20px;object-fit:contain}.guest-status{color:#78445f;font-weight:600}.guest-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:22px}.guest-actions .btn{min-width:200px}@media(max-width:540px){.guest-actions{flex-direction:column}.guest-actions .btn{width:100%}}
+
+/* SoftBloomSMP visual refinement — warm milk-glass navigation and calm motion. */
+:root{--pink:#df78a0;--deep:#713b58;--border:#f0d6e1;--soft:#fffafd}
+html{scroll-behavior:smooth}
+.topbar{background:linear-gradient(110deg,rgba(255,251,253,.97),rgba(255,239,247,.94) 52%,rgba(255,248,251,.97));border-bottom:1px solid rgba(229,160,188,.38);box-shadow:0 5px 26px rgba(116,53,80,.09);backdrop-filter:blur(18px) saturate(125%);-webkit-backdrop-filter:blur(18px) saturate(125%)}
+.brand,.homebtn,.searchwrap,.avatarbutton,.btn,.panel,.post,.composer-trigger,.react-btn,.list-user,.dropdown a,.dropdown button,.searchresults a,.field{transition:background-color .22s ease,border-color .22s ease,box-shadow .25s ease,color .22s ease,opacity .22s ease,transform .25s cubic-bezier(.2,.7,.2,1)}
+.searchwrap{background:rgba(255,255,255,.83);border-color:rgba(231,174,197,.58);box-shadow:0 3px 12px rgba(153,77,111,.035)}
+.searchwrap:focus-within{background:#fff;border-color:#e8a1bf;box-shadow:0 0 0 4px rgba(237,163,193,.18),0 6px 22px rgba(153,77,111,.08)}
+.homebtn{padding:9px 12px;border-radius:12px;color:#75405c}
+.homebtn:hover{background:rgba(244,194,216,.36);color:#b34e7b}
+.avatarbutton:hover{transform:scale(1.045)}
+.btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(190,91,136,.2)}
+.btn:not(:disabled):active{transform:translateY(0);box-shadow:none}
+.composer-trigger:hover{border-color:#e9a7c4;background:#fff9fc;box-shadow:0 4px 14px rgba(153,77,111,.08)}
+.panel{box-shadow:0 12px 38px rgba(163,84,124,.14)}
+.panel:hover{box-shadow:0 15px 40px rgba(163,84,124,.17)}
+.dropdown,.searchresults{animation:softbloom-pop .18s ease-out both;transform-origin:top right}
+.list-user:hover{background:rgba(255,235,245,.5)}
+:where(a,button,input,textarea):focus-visible{outline:3px solid rgba(223,120,160,.62);outline-offset:3px}
+.softbloom-page-enter{animation:softbloom-page-in .32s cubic-bezier(.2,.7,.2,1) both}
+@keyframes softbloom-page-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes softbloom-pop{from{opacity:0;transform:translateY(-5px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+.softbloom-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:35vh;color:#9b597b;text-align:center}
+.softbloom-loading-flower{font-size:30px;display:inline-block;animation:softbloom-breathe 1.3s ease-in-out infinite}
+.softbloom-loading-bar{width:min(220px,75vw);height:5px;border-radius:20px;overflow:hidden;background:#f7dbe8}
+.softbloom-loading-bar::after{content:'';display:block;width:42%;height:100%;border-radius:20px;background:linear-gradient(90deg,#f4a9c8,#d976a1);animation:softbloom-progress 1.3s ease-in-out infinite alternate}
+@keyframes softbloom-breathe{50%{transform:scale(1.12);opacity:.65}}
+@keyframes softbloom-progress{from{transform:translateX(-100%)}to{transform:translateX(245%)}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.softbloom-page-enter,.dropdown,.searchresults,.softbloom-loading-flower,.softbloom-loading-bar::after{animation:none!important}:where(.brand,.homebtn,.searchwrap,.avatarbutton,.btn,.panel,.post,.composer-trigger,.react-btn,.list-user,.dropdown a,.dropdown button,.searchresults a,.field){transition:none!important}}
