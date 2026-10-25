@@ -1,6 +1,6 @@
 'use client';
 import {useCallback,useEffect,useState} from 'react';
-import {ImagePlus,Newspaper,Pencil,Trash2,Send} from 'lucide-react';
+import {ImagePlus,Pencil,Trash2,Send} from 'lucide-react';
 import {supabase} from '@/lib/supabase';
 import {useAuth,Avatar} from '@/components/AppShell';
 import Link from 'next/link';
@@ -64,7 +64,7 @@ export default function NewsPage(){
   </div></div>}
   {!news.length&&<div className="sb-news-card">No news announcements yet. Check back soon! 🌷</div>}
   {news.map(n=><article className="sb-news-card" key={n.id}>
-   <div className="sb-news-author"><Link href={`/profile/${n.author_id}`} className="sb-news-author-avatar" aria-label={`View @${names[n.author_id]||'member'} profile`}><Avatar profile={{avatar_url:avatars[n.author_id]||null} as any} size={44}/></Link><div className="sb-news-author-details"><Link href={`/profile/${n.author_id}`} className="sb-news-author-name">@{names[n.author_id]||'Member'}</Link><div className="sb-news-meta">{new Date(n.created_at).toLocaleString()}{n.updated_at!==n.created_at?' · Edited':''}</div></div></div><h2>{n.title}</h2>
+   <div className="sb-news-author"><Link href={`/profile/${n.author_id}`} className="sb-news-author-avatar" aria-label={`View @${names[n.author_id]||'member'} profile`}><Avatar profile={{avatar_url:avatars[n.author_id]||null} as Parameters<typeof Avatar>[0]["profile"]} size={44}/></Link><div className="sb-news-author-details"><Link href={`/profile/${n.author_id}`} className="sb-news-author-name">@{names[n.author_id]||'Member'}</Link><div className="sb-news-meta">{new Date(n.created_at).toLocaleString()}{n.updated_at!==n.created_at?' · Edited':''}</div></div></div><h2>{n.title}</h2>
    <p className="sb-news-body">{n.body}</p>
    {n.media_url&&(n.media_type==='video'?<video className="sb-news-media" src={n.media_url} controls preload="metadata"/>:<img className="sb-news-media" src={n.media_url} alt={`Media for ${n.title}`} loading="lazy"/>)}
    {admin&&<div className="sb-news-actions"><button onClick={()=>startEdit(n)}><Pencil size={14}/> Edit</button><button disabled={busy} onClick={()=>void remove(n.id)}><Trash2 size={14}/> Delete</button></div>}
