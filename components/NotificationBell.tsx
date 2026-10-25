@@ -9,6 +9,7 @@ const labels:Record<string,string>={post_reaction:'reacted to your post',comment
 export function NotificationBell({userId}:{userId:string|null}){
  const [items,setItems]=useState<Notice[]>([]),[open,setOpen]=useState(false),[error,setError]=useState(''),[unread,setUnread]=useState(0),[clearing,setClearing]=useState(false);
  const ref=useRef<HTMLDivElement>(null);
+ useEffect(()=>{const close=()=>setOpen(false);window.addEventListener('softbloom:close-notifications',close);return()=>window.removeEventListener('softbloom:close-notifications',close)},[]);
  const load=useCallback(async()=>{
   if(!userId){setItems([]);setUnread(0);return}
   const {data,error}=await supabase.from('notifications').select('id,actor_id,kind,post_id,post_owner_id,comment_id,created_at,read_at').eq('recipient_id',userId).order('created_at',{ascending:false}).limit(80);
@@ -36,7 +37,7 @@ export function NotificationBell({userId}:{userId:string|null}){
  }
  if(!userId)return null;
  return <div className="sb-notification" ref={ref}>
- <button className="sb-notification-trigger" type="button" aria-label={`Notifications, ${unread} unread`} aria-expanded={open} onClick={()=>{setOpen(v=>!v);void load()}}><Bell size={22}/>{unread>0&&<span className="sb-notification-count">{unread>99?'99+':unread}</span>}</button>
+ <button className="sb-notification-trigger" type="button" aria-label={`Notifications, ${unread} unread`} aria-expanded={open} onClick={()=>{window.dispatchEvent(new Event('softbloom:close-header-menus'));setOpen(v=>!v);void load()}}><Bell size={22}/>{unread>0&&<span className="sb-notification-count">{unread>99?'99+':unread}</span>}</button>
  {open&&<section className="sb-notification-panel" aria-label="Notifications">
  <div className="sb-notification-head"><strong>Notifications 🌸</strong><div style={{display:"flex",gap:9,alignItems:"center",flexWrap:"wrap"}}><button type="button" onClick={()=>void markAll()} disabled={!unread||clearing} title="Mark all as read"><CheckCheck size={16}/> Mark read</button><button type="button" onClick={()=>void clearAll()} disabled={!items.length||clearing} title="Permanently clear all notifications"><Trash2 size={16}/> {clearing?"Clearing…":"Clear all"}</button></div></div>
  {error&&<p className="error">{error}</p>}

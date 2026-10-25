@@ -1,0 +1,7 @@
+/* Restore independent notification dropdown layering and click behavior */
+.topbar,.topbar nav{overflow:visible!important}
+.topbar .sb-bell-container{position:relative;display:flex;align-items:center;flex-shrink:0;z-index:300}
+.topbar .sb-notification{position:relative;z-index:301}
+.topbar .sb-notification-panel{position:absolute;z-index:2000;right:0;top:calc(100% + 10px);animation:softbloom-dropdown-enter 220ms cubic-bezier(.2,.8,.2,1) both}
+.topbar .bloom-menu,.topbar .account .dropdown{z-index:350}
+@media(max-width:600px){.topbar .sb-notification-panel{right:-42px;max-width:calc(100vw - 24px)}}
