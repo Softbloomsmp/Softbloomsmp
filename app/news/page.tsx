@@ -2,7 +2,8 @@
 import {useCallback,useEffect,useState} from 'react';
 import {ImagePlus,Newspaper,Pencil,Trash2,Send} from 'lucide-react';
 import {supabase} from '@/lib/supabase';
-import {useAuth} from '@/components/AppShell';
+import {useAuth,Avatar} from '@/components/AppShell';
+import Link from 'next/link';
 
 type News={id:string;author_id:string;title:string;body:string;media_url:string|null;media_type:string|null;created_at:string;updated_at:string};
 type Comment={id:string;news_id:string;user_id:string;body:string;created_at:string};
@@ -11,7 +12,7 @@ const EMOJIS=['❤️','👍','🥰','😂','😮','😢','🌸'];
 export default function NewsPage(){
  const {user,profile}=useAuth();
  const [admin,setAdmin]=useState(false),[news,setNews]=useState<News[]>([]),[comments,setComments]=useState<Comment[]>([]),[reactions,setReactions]=useState<Reaction[]>([]);
- const [names,setNames]=useState<Record<string,string>>({}),[title,setTitle]=useState(''),[body,setBody]=useState(''),[file,setFile]=useState<File|null>(null);
+ const [names,setNames]=useState<Record<string,string>>({}),[avatars,setAvatars]=useState<Record<string,string|null>>({}),[title,setTitle]=useState(''),[body,setBody]=useState(''),[file,setFile]=useState<File|null>(null);
  const [editing,setEditing]=useState<string|null>(null),[commentDraft,setCommentDraft]=useState<Record<string,string>>({});
  const [busy,setBusy]=useState(false),[error,setError]=useState('');
  const load=useCallback(async()=>{
@@ -23,7 +24,7 @@ export default function NewsPage(){
   if(n.error){setError(n.error.message);return}
   setNews((n.data||[]) as News[]);setComments((c.data||[]) as Comment[]);setReactions((r.data||[]) as Reaction[]);
   const ids=[...new Set([...(n.data||[]).map(x=>x.author_id),...(c.data||[]).map(x=>x.user_id)])];
-  if(ids.length){const p=await supabase.from('profiles').select('id,username').in('id',ids);setNames(Object.fromEntries((p.data||[]).map(x=>[x.id,x.username])))}
+  if(ids.length){const p=await supabase.from('profiles').select('id,username,avatar_url').in('id',ids);setNames(Object.fromEntries((p.data||[]).map(x=>[x.id,x.username])));setAvatars(Object.fromEntries((p.data||[]).map(x=>[x.id,x.avatar_url])))}
  },[]);
  useEffect(()=>{void load();const timer=setInterval(()=>void load(),60000);return()=>clearInterval(timer)},[load]);
  useEffect(()=>{if(!user)return;void supabase.rpc('bloom_is_admin').then(r=>setAdmin(r.data===true));},[user?.id]);
@@ -52,7 +53,7 @@ export default function NewsPage(){
  async function comment(id:string){const text=(commentDraft[id]||'').trim();if(!user||!text)return;setBusy(true);const r=await supabase.from('bloom_news_comments').insert({news_id:id,user_id:user.id,body:text});if(r.error)setError(r.error.message);else{setCommentDraft(p=>({...p,[id]:''}));await load()}setBusy(false)}
  async function react(id:string,emoji:string){if(!user)return;const old=reactions.find(r=>r.news_id===id&&r.user_id===user.id);const r=old?.emoji===emoji?await supabase.from('bloom_news_reactions').delete().eq('news_id',id).eq('user_id',user.id):await supabase.from('bloom_news_reactions').upsert({news_id:id,user_id:user.id,emoji},{onConflict:'news_id,user_id'});if(r.error)setError(r.error.message);else await load()}
  return <section className="sb-news-page">
-  <div className="sb-news-card"><h1><Newspaper size={23} style={{display:'inline',verticalAlign:'middle'}}/> SoftBloomSMP News</h1><p>Official server announcements, events and updates from the SoftBloomSMP team. 🌸</p></div>
+  
   {error&&<p role="alert" className="sb-news-error">{error}</p>}
   {admin&&<div className="sb-news-card"><h2>{editing?'Edit announcement':'Publish an announcement'}</h2><div style={{display:'grid',gap:10}}>
    <input aria-label="News title" placeholder="Announcement title" maxLength={140} value={title} onChange={e=>setTitle(e.target.value)}/>
@@ -63,7 +64,7 @@ export default function NewsPage(){
   </div></div>}
   {!news.length&&<div className="sb-news-card">No news announcements yet. Check back soon! 🌷</div>}
   {news.map(n=><article className="sb-news-card" key={n.id}>
-   <h2>{n.title}</h2><p className="sb-news-meta">By @{names[n.author_id]||'SoftBloom Team'} · {new Date(n.created_at).toLocaleString()}{n.updated_at!==n.created_at?' · Edited':''}</p>
+   <div className="sb-news-author"><Link href={`/profile/${n.author_id}`} className="sb-news-author-avatar" aria-label={`View @${names[n.author_id]||'member'} profile`}><Avatar profile={{avatar_url:avatars[n.author_id]||null} as any} size={44}/></Link><div className="sb-news-author-details"><Link href={`/profile/${n.author_id}`} className="sb-news-author-name">@{names[n.author_id]||'Member'}</Link><div className="sb-news-meta">{new Date(n.created_at).toLocaleString()}{n.updated_at!==n.created_at?' · Edited':''}</div></div></div><h2>{n.title}</h2>
    <p className="sb-news-body">{n.body}</p>
    {n.media_url&&(n.media_type==='video'?<video className="sb-news-media" src={n.media_url} controls preload="metadata"/>:<img className="sb-news-media" src={n.media_url} alt={`Media for ${n.title}`} loading="lazy"/>)}
    {admin&&<div className="sb-news-actions"><button onClick={()=>startEdit(n)}><Pencil size={14}/> Edit</button><button disabled={busy} onClick={()=>void remove(n.id)}><Trash2 size={14}/> Delete</button></div>}
