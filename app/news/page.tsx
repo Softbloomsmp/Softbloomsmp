@@ -14,6 +14,8 @@ const EMOJIS=['❤️','👍','🥰','😂','😮','😢','🌸'];
 export default function NewsPage(){
  const {user,profile}=useAuth();
  const [picker,setPicker]=useState<string|null>(null),[replyTo,setReplyTo]=useState<string|null>(null),[commentReactions,setCommentReactions]=useState<CommentReaction[]>([]);
+ const [visibleComments,setVisibleComments]=useState<Record<string,boolean>>({});
+ const [visibleReplies,setVisibleReplies]=useState<Record<string,boolean>>({});
  const [composer,setComposer]=useState(false),[portalReady,setPortalReady]=useState(false);const fileRef=useRef<HTMLInputElement>(null);
  useEffect(()=>setPortalReady(true),[]);
  useEffect(()=>{if(!picker)return;const dismiss=(e:PointerEvent)=>{if(!(e.target as HTMLElement).closest('.sb-reaction-wrap'))setPicker(null)};document.addEventListener('pointerdown',dismiss);return()=>document.removeEventListener('pointerdown',dismiss)},[picker]);
@@ -76,7 +78,8 @@ export default function NewsPage(){
    <div className="sb-news-comment-controls">{pickerButton(c.id,'comment',selected,e=>void reactComment(c.id,e))}<button type="button" onClick={()=>setReplyTo(v=>v===c.id?null:c.id)}>Reply</button>{(admin||c.user_id===user?.id)&&<button type="button" onClick={async()=>{if(!confirm('Delete this comment and its replies?'))return;const r=await supabase.from('bloom_news_comments').delete().eq('id',c.id);if(r.error)setError(r.error.message);else await load()}}>Delete</button>}</div>
    <div className="sb-news-reaction-counts">{EMOJIS.filter(e=>commentReactions.some(r=>r.comment_id===c.id&&r.emoji===e)).map(e=><span key={e}>{e} {commentReactions.filter(r=>r.comment_id===c.id&&r.emoji===e).length}</span>)}</div>
    {replyTo===c.id&&<div className="sb-news-reply-input"><input aria-label={`Reply to ${names[c.user_id]||'member'}`} placeholder={`Reply to @${names[c.user_id]||'member'}...`} maxLength={2000} value={commentDraft[c.id]||''} onChange={e=>setCommentDraft(p=>({...p,[c.id]:e.target.value}))}/><button disabled={busy||!commentDraft[c.id]?.trim()} onClick={()=>void comment(postId,c.id)}><Send size={16}/></button></div>}
-   {children.map(child=>renderComment(child,depth+1,postId))}
+   {children.length>0&&<button type="button" className="sb-news-thread-toggle" aria-expanded={!!visibleReplies[c.id]} onClick={()=>setVisibleReplies(prev=>({...prev,[c.id]:!prev[c.id]}))}>{visibleReplies[c.id]?'Hide Replies':`View Replies (${children.length})`}</button>}
+   {visibleReplies[c.id]&&children.map(child=>renderComment(child,depth+1,postId))}
   </div>
  }
  return <section className="sb-news-page">
@@ -90,8 +93,8 @@ export default function NewsPage(){
    {n.media_url&&(n.media_type==='video'?<video className="sb-news-media" src={n.media_url} controls preload="metadata"/>:<img className="sb-news-media" src={n.media_url} alt={`Media for ${n.title}`} loading="lazy"/>)}
    {admin&&<div className="sb-news-actions"><button onClick={()=>startEdit(n)}><Pencil size={14}/> Edit</button><button disabled={busy} onClick={()=>void remove(n.id)}><Trash2 size={14}/> Delete</button></div>}
    <div className="sb-news-post-reactions">{pickerButton(n.id,'post',reactions.find(r=>r.news_id===n.id&&r.user_id===user?.id)?.emoji,e=>{setPicker(null);void react(n.id,e)})}<div className="sb-news-reaction-counts">{EMOJIS.filter(e=>reactions.some(r=>r.news_id===n.id&&r.emoji===e)).map(e=><span key={e}>{e} {reactions.filter(r=>r.news_id===n.id&&r.emoji===e).length}</span>)}</div></div>
-   <h3>Comments ({comments.filter(c=>c.news_id===n.id).length})</h3>
-   {comments.filter(c=>c.news_id===n.id&&!c.parent_id).map(c=>renderComment(c,0,n.id))}
+   <button type="button" className="sb-news-thread-toggle sb-news-comments-toggle" aria-expanded={!!visibleComments[n.id]} onClick={()=>setVisibleComments(prev=>({...prev,[n.id]:!prev[n.id]}))}>{visibleComments[n.id]?'Hide Comments':`View Comments (${comments.filter(c=>c.news_id===n.id).length})`}</button>
+   {visibleComments[n.id]&&comments.filter(c=>c.news_id===n.id&&!c.parent_id).map(c=>renderComment(c,0,n.id))}
    <div style={{display:'flex',gap:8,marginTop:12}}><input aria-label="Write a comment" placeholder={`Comment as @${profile?.username||'member'}...`} maxLength={2000} value={commentDraft[n.id]||''} onChange={e=>setCommentDraft(p=>({...p,[n.id]:e.target.value}))}/><div className="sb-news-actions"><button disabled={busy||!commentDraft[n.id]?.trim()} onClick={()=>void comment(n.id)}><Send size={16}/></button></div></div>
   </article>)}
   {composer&&admin&&portalReady&&createPortal(
