@@ -1,1 +1,1 @@
-Replace components/AppShell.tsx in GitHub. Removes Support Us from the Bloom dropdown. Shop and Our Wiki remain. Preserves News button, unread count, notification bell, and existing layout. No SQL changes.
+Upload both files to components/. Replace AppShell.tsx and add mobile-header-fix.css. No SQL changes. Mobile-only CSS grid: first row logo + nav, second row News + search. Desktop unchanged. Not production-build tested.

@@ -12,6 +12,7 @@ import './dropdown-motion.css';
 import './notification-repair.css';
 import './social-footer.css';
 import './news.css';
+import './mobile-header-fix.css';
 import { SocialDiscord,SocialYoutube,SocialInstagram,SocialTikTok } from './SocialIcons';
 type AuthState={user:User|null;profile:Profile|null;refresh:()=>Promise<void>;login:(provider:'google'|'discord')=>Promise<void>};
 const AuthContext=createContext<AuthState>({user:null,profile:null,refresh:async()=>{},login:async()=>{}});

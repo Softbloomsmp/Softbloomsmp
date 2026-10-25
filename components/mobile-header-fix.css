@@ -1,0 +1,67 @@
+/* Mobile-only header alignment fix. Desktop styles remain untouched. */
+@media (max-width:650px) {
+  .topbar {
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-rows:auto auto!important;
+    align-items:center!important;
+    column-gap:8px!important;
+    row-gap:9px!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    padding:10px 12px!important;
+    flex-wrap:initial!important;
+    box-sizing:border-box!important;
+  }
+  .topbar>.brand {
+    grid-column:1!important;grid-row:1!important;
+    min-width:0!important;max-width:100%!important;
+    display:flex!important;align-items:center!important;
+    gap:7px!important;margin:0!important;
+    font-size:clamp(12px,3.7vw,15px)!important;
+    overflow:hidden!important;
+  }
+  .topbar>.brand span {overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;min-width:0!important}
+  .topbar>.brand img {width:30px!important;height:30px!important;flex-shrink:0!important}
+  .topbar>nav {
+    grid-column:2!important;grid-row:1!important;
+    display:flex!important;flex-wrap:nowrap!important;
+    justify-content:flex-end!important;align-items:center!important;
+    gap:clamp(3px,1vw,7px)!important;
+    width:auto!important;max-width:100%!important;
+    min-width:0!important;height:auto!important;
+    margin:0!important;padding:0!important;
+  }
+  .topbar>nav .homebtn {padding:5px 6px!important;min-height:32px!important;white-space:nowrap!important;font-size:11px!important;gap:3px!important}
+  .topbar>nav .homebtn svg {width:15px!important;height:15px!important;flex-shrink:0!important}
+  .topbar>nav .homebtn.homebtn span {display:none!important}
+  .topbar>nav .bloom-nav>.homebtn {padding:5px!important}
+  .topbar>nav .sb-bell-container,.topbar>nav .account,.topbar>nav .bloom-nav {flex-shrink:0!important}
+  .topbar>nav .avatarbutton,.topbar>nav .sb-notification-trigger {width:32px!important;height:32px!important}
+  .topbar>.softbloom-news-nav {
+    grid-column:1!important;grid-row:2!important;
+    justify-self:start!important;align-self:center!important;
+    margin:0!important;min-height:36px!important;
+    padding:6px 9px!important;white-space:nowrap!important;
+  }
+  .topbar>.searchwrap {
+    grid-column:2!important;grid-row:2!important;
+    order:initial!important;flex-basis:auto!important;
+    width:clamp(150px,52vw,270px)!important;
+    max-width:100%!important;min-width:0!important;
+    height:36px!important;margin:0!important;
+  }
+  .topbar>.searchwrap input {width:100%!important;min-width:0!important}
+  .topbar .bloom-menu {right:0!important;left:auto!important}
+}
+@media (max-width:365px) {
+  .topbar {padding:9px 7px!important;column-gap:4px!important}
+  .topbar>.brand {font-size:12px!important;gap:4px!important}
+  .topbar>.brand img {width:25px!important;height:25px!important}
+  .topbar>nav {gap:2px!important}
+  .topbar>nav .homebtn {padding:4px!important}
+  .topbar>nav .avatarbutton,.topbar>nav .sb-notification-trigger {width:29px!important;height:29px!important}
+  .topbar>.searchwrap {width:clamp(135px,50vw,190px)!important}
+  .topbar>.softbloom-news-nav {padding:5px 7px!important}
+}
