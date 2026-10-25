@@ -1,1 +1,1 @@
-Replace only app/news/page.tsx in GitHub and redeploy. Removes the explicit any lint error on the author avatar and the unused Newspaper import. No SQL changes. Other build warnings are nonblocking. Full production build not run.
+Replace app/news/page.tsx only. News admin composer now uses same trigger and modal styling as Home feed; regular members cannot publish. Existing database RLS remains required. No SQL changes. Not production-build tested.

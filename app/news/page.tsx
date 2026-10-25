@@ -1,6 +1,7 @@
 'use client';
-import {useCallback,useEffect,useState} from 'react';
-import {ImagePlus,Pencil,Trash2,Send} from 'lucide-react';
+import {useCallback,useEffect,useState,useRef} from 'react';
+import {createPortal} from 'react-dom';
+import {Image as ImageIcon,Video,Pencil,Trash2,Send} from 'lucide-react';
 import {supabase} from '@/lib/supabase';
 import {useAuth,Avatar} from '@/components/AppShell';
 import Link from 'next/link';
@@ -11,6 +12,9 @@ type Reaction={news_id:string;user_id:string;emoji:string};
 const EMOJIS=['❤️','👍','🥰','😂','😮','😢','🌸'];
 export default function NewsPage(){
  const {user,profile}=useAuth();
+ const [composer,setComposer]=useState(false),[portalReady,setPortalReady]=useState(false);const fileRef=useRef<HTMLInputElement>(null);
+ useEffect(()=>setPortalReady(true),[]);
+ useEffect(()=>{if(!composer)return;const prev=document.body.style.overflow;document.body.style.overflow='hidden';const key=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!busy)setComposer(false)};window.addEventListener('keydown',key);return()=>{document.body.style.overflow=prev;window.removeEventListener('keydown',key)}},[composer,busy]);
  const [admin,setAdmin]=useState(false),[news,setNews]=useState<News[]>([]),[comments,setComments]=useState<Comment[]>([]),[reactions,setReactions]=useState<Reaction[]>([]);
  const [names,setNames]=useState<Record<string,string>>({}),[avatars,setAvatars]=useState<Record<string,string|null>>({}),[title,setTitle]=useState(''),[body,setBody]=useState(''),[file,setFile]=useState<File|null>(null);
  const [editing,setEditing]=useState<string|null>(null),[commentDraft,setCommentDraft]=useState<Record<string,string>>({});
@@ -45,23 +49,19 @@ export default function NewsPage(){
   }
   const payload={title:title.trim(),body:body.trim(),...(mediaUrl?{media_url:mediaUrl,media_type:mediaType}:{})};
   const result=editing?await supabase.from('bloom_news').update(payload).eq('id',editing):await supabase.from('bloom_news').insert({...payload,author_id:user.id});
-  if(result.error){setError(result.error.message)}else{setEditing(null);setTitle('');setBody('');setFile(null);await load()}
+  if(result.error){setError(result.error.message)}else{setEditing(null);setTitle('');setBody('');setFile(null);setComposer(false);await load()}
   setBusy(false);
  }
- function startEdit(n:News){setEditing(n.id);setTitle(n.title);setBody(n.body);setFile(null);window.scrollTo({top:0,behavior:'smooth'})}
+ function startEdit(n:News){setEditing(n.id);setTitle(n.title);setBody(n.body);setFile(null);setError('');setComposer(true)}
+ function startNew(){setEditing(null);setTitle('');setBody('');setFile(null);setError('');setComposer(true)}
+ function chooseFile(f?:File){if(!f)return;const allowed=['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm'];if(!allowed.includes(f.type)||f.size>25*1024*1024){setError('Use JPG, PNG, WebP, GIF, MP4 or WebM, up to 25 MB.');return}setFile(f);setError('')}
  async function remove(id:string){if(!admin||!confirm('Delete this news post and its comments/reactions?'))return;setBusy(true);const r=await supabase.from('bloom_news').delete().eq('id',id);if(r.error)setError(r.error.message);else await load();setBusy(false)}
  async function comment(id:string){const text=(commentDraft[id]||'').trim();if(!user||!text)return;setBusy(true);const r=await supabase.from('bloom_news_comments').insert({news_id:id,user_id:user.id,body:text});if(r.error)setError(r.error.message);else{setCommentDraft(p=>({...p,[id]:''}));await load()}setBusy(false)}
  async function react(id:string,emoji:string){if(!user)return;const old=reactions.find(r=>r.news_id===id&&r.user_id===user.id);const r=old?.emoji===emoji?await supabase.from('bloom_news_reactions').delete().eq('news_id',id).eq('user_id',user.id):await supabase.from('bloom_news_reactions').upsert({news_id:id,user_id:user.id,emoji},{onConflict:'news_id,user_id'});if(r.error)setError(r.error.message);else await load()}
  return <section className="sb-news-page">
   
   {error&&<p role="alert" className="sb-news-error">{error}</p>}
-  {admin&&<div className="sb-news-card"><h2>{editing?'Edit announcement':'Publish an announcement'}</h2><div style={{display:'grid',gap:10}}>
-   <input aria-label="News title" placeholder="Announcement title" maxLength={140} value={title} onChange={e=>setTitle(e.target.value)}/>
-   <textarea aria-label="News content" placeholder="Write the news here..." maxLength={10000} value={body} onChange={e=>setBody(e.target.value)}/>
-   <div className="sb-news-actions">{EMOJIS.map(e=><button key={e} type="button" onClick={()=>setBody(v=>v+e)}>{e}</button>)}</div>
-   <label><ImagePlus size={16} style={{display:'inline'}}/> Picture or video <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" onChange={e=>setFile(e.target.files?.[0]||null)}/></label>
-   <div className="sb-news-actions"><button type="button" disabled={busy||!title.trim()} onClick={()=>void save()}>{editing?'Save changes':'Publish news'}</button>{editing&&<button type="button" onClick={()=>{setEditing(null);setTitle('');setBody('');setFile(null)}}>Cancel edit</button>}</div>
-  </div></div>}
+  {admin&&<section className="panel"><div className="row"><Avatar profile={profile}/><div className="grow"><strong>{profile?.username||'Administrator'}</strong><button className="composer-trigger" style={{display:'block',width:'100%',marginTop:7}} onClick={startNew}>What&apos;s blooming in SoftBloomSMP? 🌸</button></div></div><div className="row between" style={{marginTop:12}}><span className="muted small">📷 Photo · 🎬 Video · 😊 Emoji</span><span className="muted small">Admin announcements only</span></div></section>}
   {!news.length&&<div className="sb-news-card">No news announcements yet. Check back soon! 🌷</div>}
   {news.map(n=><article className="sb-news-card" key={n.id}>
    <div className="sb-news-author"><Link href={`/profile/${n.author_id}`} className="sb-news-author-avatar" aria-label={`View @${names[n.author_id]||'member'} profile`}><Avatar profile={{avatar_url:avatars[n.author_id]||null} as Parameters<typeof Avatar>[0]["profile"]} size={44}/></Link><div className="sb-news-author-details"><Link href={`/profile/${n.author_id}`} className="sb-news-author-name">@{names[n.author_id]||'Member'}</Link><div className="sb-news-meta">{new Date(n.created_at).toLocaleString()}{n.updated_at!==n.created_at?' · Edited':''}</div></div></div><h2>{n.title}</h2>
