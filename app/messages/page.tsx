@@ -19,7 +19,7 @@ export default function Inbox(){
   }
   void load();const timer=window.setInterval(()=>{if(document.visibilityState==='visible')void load()},10000);
   return()=>{active=false;window.clearInterval(timer)};
- },[user?.id]);
+ },[user]);
  if(!user)return <section className="panel center"><h2>Messages 🌸</h2><p>Sign in to view your messages.</p><button className="btn" onClick={()=>login('google')}>Sign in</button></section>;
- return <section className="panel"><h2>Messages 🌸</h2>{error&&<p className="error" role="alert">{error}</p>}{people.length===0&&!error&&<p className="muted">No conversations yet. Visit someone's profile to send a message.</p>}{people.map(({profile,last})=><Link className="list-user" href={`/messages/${profile.id}`} key={profile.id}><Avatar profile={profile}/><div><strong>{profile.username}</strong><div className="muted small">{last.body.slice(0,100)}</div></div></Link>)}</section>;
+ return <section className="panel"><h2>Messages 🌸</h2>{error&&<p className="error" role="alert">{error}</p>}{people.length===0&&!error&&<p className="muted">No conversations yet. Visit someone&apos;s profile to send a message.</p>}{people.map(({profile,last})=><Link className="list-user" href={`/messages/${profile.id}`} key={profile.id}><Avatar profile={profile}/><div><strong>{profile.username}</strong><div className="muted small">{last.body.slice(0,100)}</div></div></Link>)}</section>;
 }

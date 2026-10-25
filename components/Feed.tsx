@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useState,useCallback,useRef} from 'react';
 import Link from 'next/link';
-import {Image as ImageIcon,Video,Smile,Send,PenLine,Trash2,MessageCircle} from 'lucide-react';
+import {Image as ImageIcon,Video,Send,PenLine,Trash2,MessageCircle} from 'lucide-react';
 import {supabase,Post,Profile} from '@/lib/supabase';
 import {useAuth,Avatar} from './AppShell';
 const EMOJIS=['❤️','👍','🥰','😂','😮','😢','🌸'];
@@ -55,7 +55,7 @@ export function Feed({onlyUser}:{onlyUser?:string}){
   commentRows.forEach(c=>(cm[c.post_id]??=[]).push({...c,profiles:profiles.get(c.user_id)}));
   (reactionResult.data||[]).forEach(r=>(rm[r.post_id]??=[]).push(r));
   setComments(cm);setReactions(rm);setFeedError('');
- },[onlyUser,user?.id]);
+ },[onlyUser,user]);
  useEffect(()=>{
   void load();
   // Refresh when returning to the tab and periodically while viewing the feed.
@@ -75,7 +75,7 @@ export function Feed({onlyUser}:{onlyUser?:string}){
   void update();
   // Count is refreshed after saves/deletions via load's post list as well.
   return ()=>{active=false};
- },[user?.id,posts]);
+ },[user,posts]);
  function start(post?:Post){setEditing(post||null);setBody(post?.body||'');setFile(null);setRemoveMedia(false);setError('');setComposer(true)}
  function chooseFile(f?:File){if(!f)return;const image=f.type.startsWith('image/'),video=f.type.startsWith('video/');if(!image&&!video){setError('Only images and videos are allowed.');return}if(f.size>(image?3:10)*1024*1024){setError(`${image?'Images':'Videos'} must be ${image?'3':'10'} MB or less.`);return}setFile(f);setRemoveMedia(false);setError('')}
  async function save(){if(!user)return;setBusy(true);setError('');try{let media_url=editing?.media_url||null,media_type=editing?.media_type||null;if(file){const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Please sign in again.');const fd=new FormData();fd.set('file',file);const res=await fetch('/api/media',{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`},body:fd});const out=await res.json();if(!res.ok)throw new Error(out.error||'Upload failed');media_url=out.url;media_type=out.type}else if(removeMedia){media_url=null;media_type=null}if(!body.trim()&&!media_url)throw new Error('Add some text or an attachment.');const payload={body:body.trim(),media_url,media_type};const result=editing?await supabase.from('posts').update(payload).eq('id',editing.id).eq('user_id',user.id):await supabase.from('posts').insert({...payload,user_id:user.id});if(result.error)throw result.error;setComposer(false);await load()}catch(e){setError(e instanceof Error?e.message:'Could not save post')}finally{setBusy(false)}}

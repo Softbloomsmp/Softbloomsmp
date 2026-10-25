@@ -14,7 +14,7 @@ export default function MessagePage(){
    .or(`and(sender_id.eq.${user.id},recipient_id.eq.${id}),and(sender_id.eq.${id},recipient_id.eq.${user.id})`)
    .order('created_at',{ascending:true}).limit(200);
   if(error){setError(error.message);return}setMessages(data||[]);setError('');
- },[user?.id,id]);
+ },[user,id]);
  useEffect(()=>{if(id)void supabase.from('profiles').select('*').eq('id',id).maybeSingle().then(({data})=>setRecipient(data))},[id]);
  useEffect(()=>{void load();const timer=window.setInterval(()=>{if(document.visibilityState==='visible')void load()},5000);return()=>window.clearInterval(timer)},[load]);
  async function send(e:React.FormEvent){e.preventDefault();if(!user||!recipient||!draft.trim()||busy)return;setBusy(true);setError('');const {error:sendError}=await supabase.from('direct_messages').insert({sender_id:user.id,recipient_id:id,body:draft.trim()});if(sendError)setError(sendError.message);else{setDraft('');await load()}setBusy(false)}
