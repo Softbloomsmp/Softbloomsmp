@@ -1,14 +1,9 @@
-SoftBloomSMP — Admin Delete Products
+SoftBloomSMP — exclusive, outside-click dropdowns and smooth entrance
 
-1. Run supabase/bloom_archive_products.sql in Supabase SQL Editor once.
-2. Replace app/shop/page.tsx in your GitHub repository.
-3. Deploy Vercel and test with admin and ordinary member accounts.
+Upload BOTH files to components/ in GitHub:
+  components/AppShell.tsx (replace)
+  components/dropdown-motion.css (new)
 
-Admin-only Delete button appears beside Edit on each shop product.
-A confirmation is required. Deleted products disappear from the shop, cannot be purchased,
-and are archived in Supabase so existing orders and transaction records remain intact.
-No wallet balances or previous purchases are changed. Existing product images remain in storage
-for audit/history; they are not automatically deleted.
+Bloom and account menus now close when clicking elsewhere, on Escape, and when changing pages. Opening one closes the other. The dropdowns gently slide down and fade in; reduced-motion preferences are respected. The notification bell retains its own existing outside-click behavior.
 
-This update builds on the previous Admin Ticket & Order Delete release, retaining GIF/image
-upload and existing ticket/order archive controls. Production build/live database testing not run.
+No SQL or other files changed. Keep the existing slim header CSS, background, guest login, and all other features.
