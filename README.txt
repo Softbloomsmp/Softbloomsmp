@@ -1,9 +1,14 @@
-SoftBloomSMP Admin Delete (archive) tickets and orders
+SoftBloomSMP — Admin Delete Products
 
-1. Run supabase/bloom_archive_records.sql in Supabase SQL Editor once.
-2. Replace app/shop/page.tsx in GitHub.
-3. Deploy via Vercel.
+1. Run supabase/bloom_archive_products.sql in Supabase SQL Editor once.
+2. Replace app/shop/page.tsx in your GitHub repository.
+3. Deploy Vercel and test with admin and ordinary member accounts.
 
-Admin-only Delete buttons added to Admin ticket inbox and Recent orders. Confirmation required. Deletes archive records, keeping wallet ledger and payment history intact. Open/awaiting-payment tickets and pending orders must be resolved before archiving. Archived records disappear from the active shop lists for all users. No refunds or BCoins adjustments occur.
+Admin-only Delete button appears beside Edit on each shop product.
+A confirmation is required. Deleted products disappear from the shop, cannot be purchased,
+and are archived in Supabase so existing orders and transaction records remain intact.
+No wallet balances or previous purchases are changed. Existing product images remain in storage
+for audit/history; they are not automatically deleted.
 
-Existing product image upload, GIF support, wallets and ticket replies are preserved. Production build/live DB test not run.
+This update builds on the previous Admin Ticket & Order Delete release, retaining GIF/image
+upload and existing ticket/order archive controls. Production build/live database testing not run.
