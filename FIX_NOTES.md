@@ -7,3 +7,5 @@ SoftBloomSMP Homepage Feed Fix
 Upload project to GitHub, let Vercel redeploy, and verify the homepage.
 
 - Removed the homepage welcome banner and tagline above the post composer.
+
+- Replaced CSS landscape with supplied cherry-blossom Minecraft sunset image, kept 9px blur and existing falling petals.
