@@ -1,3 +1,7 @@
-Copy app/ paths into the website repository. Back up database, then apply supabase/softbloom_bridge_v001.sql after existing shop migrations.
-Set Vercel SOFTBLOOM_BRIDGE_SECRET, SUPABASE_SERVICE_ROLE_KEY (server only), and NEXT_PUBLIC_SUPABASE_URL. Redeploy.
-Linking remains unimplemented; manual recipient entry only. Test in staging first.
+SoftBloomSMP website patch (only changed files)
+1. Copy app/shop/page.tsx and app/api/bridge/route.ts to corresponding website paths.
+2. If not previously run, apply supabase/softbloom_bridge_v001.sql from your earlier release first.
+3. Run supabase/softbloom_bridge_v002_stash.sql ONCE in Supabase SQL Editor.
+4. Confirm Vercel server-side env: SOFTBLOOM_BRIDGE_SECRET and SUPABASE_SERVICE_ROLE_KEY. Redeploy.
+5. Product editor now has Reward Type: Item (/mystash voucher) or Non-item (automatic).
+IMPORTANT: This is a staging patch; do not use for live payments before testing delivery, crash recovery and legacy RPC paths.

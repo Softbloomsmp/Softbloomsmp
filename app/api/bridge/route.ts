@@ -18,6 +18,10 @@ export async function POST(request:NextRequest){
   functionName='bloom_bridge_register_player';args={p_uuid:body.uuid,p_name:body.name,p_platform:body.platform};
  }else if(body.action==='claim'){
   functionName='bloom_bridge_claim_delivery';args={};
+ }else if(body.action==='stash'&&typeof body.uuid==='string'){
+  functionName='bloom_bridge_list_stash';args={p_uuid:body.uuid};
+ }else if(body.action==='stash_claim'&&typeof body.uuid==='string'&&typeof body.orderId==='string'){
+  functionName='bloom_bridge_claim_stash';args={p_uuid:body.uuid,p_order:body.orderId};
  }else if(body.action==='finish'&&typeof body.orderId==='string'&&typeof body.success==='boolean'){
   functionName='bloom_bridge_finish_delivery';args={p_order:body.orderId,p_success:body.success,p_error:typeof body.error==='string'?body.error.slice(0,500):null};
  }else return NextResponse.json({error:'Invalid action'},{status:400,headers:noStore});
