@@ -21,7 +21,7 @@ export default function ServerStatus(){
  },[]);
  const label=error?'Unavailable':!status?'Checking':status.online?'Online':'Offline';
  const countLabel=status?.online?(status.playersOnline===null?'Players unavailable':`${status.playersOnline}/${status.playersMax ?? '?'}`):null;
- return <span className={`sb-server-status ${status?.online?'is-online':status?'is-offline':'is-unknown'}`} role="status" aria-label={`Minecraft server ${label}`} title={status?.online?`Minecraft server online${status.playersOnline!==null?` · ${status.playersOnline} players`:''}`:`Minecraft server status: ${label}`}>
-  <span className="sb-server-dot" aria-hidden="true"/><span className="sb-server-label">{label}</span>{status?.online&&countLabel&&<span className="sb-server-count">· {countLabel}</span>}
+ return <span className={`sb-server-status ${status?.online?'is-online':status?'is-offline':'is-unknown'}`} role="status" aria-label={`Minecraft server Softbloomsmp.site ${label}${countLabel?` ${countLabel}`:""}`} title={status?.online?`Minecraft server online${status.playersOnline!==null?` · ${status.playersOnline} players`:''}`:`Minecraft server status: ${label}`}>
+  <span className="sb-server-dot" aria-hidden="true"/><span className="sb-server-ip" title="Java: Softbloomsmp.site · Bedrock: Softbloomsmp.site:12006">Softbloomsmp.site</span><span className="sb-server-separator" aria-hidden="true">·</span><span className="sb-server-label">{label}</span>{status?.online&&countLabel&&<span className="sb-server-count">· {countLabel}</span>}
  </span>;
 }
