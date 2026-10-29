@@ -10,12 +10,11 @@ export const metadata = {
 export default function StaffPage() {
   return (
     <div className="sb-info">
-      <header className="sb-info-hero">
-        <p className="sb-info-kicker">🌸 SOFTBLOOM COMMUNITY</p>
-        <h1>Our Staff Team</h1>
-        <p>Meet the people who help our community grow and thrive.</p>
-        <div className="sb-info-actions"><Link href="/softbloom">Back to SoftBloom</Link></div>
-      </header>
+      <Link className="sb-staff-floating-back" href="/softbloom" aria-label="Back to SoftBloom">
+        <span className="sb-staff-back-petal" aria-hidden="true">🌸</span>
+        <span>Back to SoftBloom</span>
+        <span className="sb-staff-back-petal sb-staff-back-petal-two" aria-hidden="true">🌸</span>
+      </Link>
       <StaffManager />
     </div>
   );

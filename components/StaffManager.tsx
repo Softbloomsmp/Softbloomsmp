@@ -6,6 +6,28 @@ import {useAuth} from '@/components/AppShell';
 
 type Staff={id:string;name:string;role:string;image_url:string|null;profile_id:string|null;sort_order:number};
 type Candidate={id:string;username:string};
+const STAFF_TIERS=[
+ {key:'owner',title:'Owner'},
+ {key:'co-owner',title:'Co-Owner'},
+ {key:'developer',title:'Developers'},
+ {key:'admin',title:'Admins'},
+ {key:'moderator',title:'Moderators'},
+ {key:'helper',title:'Helpers'},
+ {key:'builder',title:'Builders'},
+ {key:'other',title:'Other Team Members'}
+] as const;
+const ROLE_OPTIONS=['Owner','Co-Owner','Developer','Admin','Moderator','Helper','Builder'] as const;
+function staffTier(role:string){
+ const r=role.toLowerCase().trim().replace(/[–—]/g,'-');
+ if(/\bco[ -]?owner\b/.test(r))return 'co-owner';
+ if(/\bowner\b/.test(r))return 'owner';
+ if(/\bdeveloper\b|\bdev\b/.test(r))return 'developer';
+ if(/\badmin(?:istrator)?\b/.test(r))return 'admin';
+ if(/\bmoderator\b|\bmod\b/.test(r))return 'moderator';
+ if(/\bhelper\b/.test(r))return 'helper';
+ if(/\bbuilder\b/.test(r))return 'builder';
+ return 'other';
+}
 const defaults:Staff[]=[
 {id:'legacy-val',name:'Val',role:'Owner & Developer',image_url:'/softbloom-info/val.png',profile_id:null,sort_order:0},
 {id:'legacy-adam',name:'Adam',role:'Admin',image_url:'/softbloom-info/adam.png',profile_id:null,sort_order:1},
@@ -31,7 +53,11 @@ export default function StaffManager(){
  async function remove(item:Staff){if(!admin||busy||!confirm(`Remove ${item.name} from the staff page?`))return;setBusy(true);const r=await supabase.from('bloom_staff').delete().eq('id',item.id);if(r.error)setError(r.error.message);else await load();setBusy(false);}
  return <section id="staff"><div className="sb-staff-heading"><div><h2>Meet the Staff</h2><p>The people who help SoftBloom grow and thrive.</p></div>{admin&&<button type="button" className="sb-staff-button" onClick={()=>start()}>+ Add More</button>}</div>
  {error&&<p role="alert" className="sb-staff-error">{error}</p>}
- <div className="sb-info-staff">{(ready?staff:defaults).map(s=><article className="sb-info-card" key={s.id}>{s.profile_id?<Link href={`/profile/${s.profile_id}`} className="sb-staff-profile">{s.image_url&&<img src={s.image_url} alt={s.name} loading="lazy"/>}<h3>{s.name}</h3></Link>:<>{s.image_url&&<img src={s.image_url} alt={s.name} loading="lazy"/>}<h3>{s.name}</h3></>}<p>{s.role}</p>{s.profile_id&&<Link href={`/profile/${s.profile_id}`} className="sb-staff-view">View profile</Link>}{admin&&<div className="sb-staff-actions"><button onClick={()=>start(s)}>Edit</button><button disabled={busy} onClick={()=>void remove(s)}>Remove</button></div>}</article>)}</div>
- {open&&admin&&<div className="sb-staff-overlay" onMouseDown={e=>{if(e.target===e.currentTarget&&!busy)setOpen(false)}}><div className="sb-staff-dialog" role="dialog" aria-modal="true" aria-label={editing?'Edit staff':'Add staff'}><div className="sb-staff-heading"><h2>{editing?'Edit Staff':'Add Staff'} 🌸</h2><button disabled={busy} onClick={()=>setOpen(false)} aria-label="Close">✕</button></div><label>Role / Position<input maxLength={100} value={role} onChange={e=>setRole(e.target.value)} placeholder="e.g. Community Manager"/></label><label>In-game Name<input maxLength={80} value={name} onChange={e=>setName(e.target.value)} placeholder="Enter Minecraft username"/></label><label>Picture (PNG, JPG, WebP · max 3 MB)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>setImage(e.target.files?.[0]||null)}/></label><label>Link an existing website user (optional)<input value={search} onChange={e=>{setSearch(e.target.value);setLinked(null);}} placeholder="Search username..."/></label>{linked&&<div className="sb-staff-linked">Linked to @{linked.username} <button onClick={()=>{setLinked(null);setSearch('');}}>Unlink</button></div>}{search.trim().length>=2&&!linked&&<div className="sb-staff-results">{candidates.map(c=><button key={c.id} onClick={()=>{setLinked(c);setSearch(c.username);setCandidates([]);}}>@{c.username}</button>)}{!candidates.length&&<span>No matching users</span>}</div>}<div className="sb-staff-actions"><button disabled={busy} onClick={()=>setOpen(false)}>Cancel</button><button className="sb-staff-button" disabled={busy} onClick={()=>void save()}>{busy?'Saving...':'Save Staff'}</button></div></div></div>}
+ <div className="sb-staff-hierarchy">{STAFF_TIERS.map(tier=>{
+ const members=(ready?staff:defaults).filter(s=>staffTier(s.role)===tier.key);
+ if(!members.length)return null;
+ return <section className="sb-staff-tier" key={tier.key} aria-label={tier.title}><h3 className="sb-staff-tier-title">{tier.title}</h3><div className="sb-info-staff">{members.map(s=><article className="sb-info-card" key={s.id}>{s.profile_id?<Link href={`/profile/${s.profile_id}`} className="sb-staff-profile">{s.image_url&&<img src={s.image_url} alt={s.name} loading="lazy"/>}<h3>{s.name}</h3></Link>:<>{s.image_url&&<img src={s.image_url} alt={s.name} loading="lazy"/>}<h3>{s.name}</h3></>}<p>{s.role}</p>{s.profile_id&&<Link href={`/profile/${s.profile_id}`} className="sb-staff-view">View profile</Link>}{admin&&<div className="sb-staff-actions"><button onClick={()=>start(s)}>Edit</button><button disabled={busy} onClick={()=>void remove(s)}>Remove</button></div>}</article>)}</div></section>;
+ })}</div>
+ {open&&admin&&<div className="sb-staff-overlay" onMouseDown={e=>{if(e.target===e.currentTarget&&!busy)setOpen(false)}}><div className="sb-staff-dialog" role="dialog" aria-modal="true" aria-label={editing?'Edit staff':'Add staff'}><div className="sb-staff-heading"><h2>{editing?'Edit Staff':'Add Staff'} 🌸</h2><button disabled={busy} onClick={()=>setOpen(false)} aria-label="Close">✕</button></div><label>Choose an existing role (optional)<select value={ROLE_OPTIONS.includes(role as typeof ROLE_OPTIONS[number])?role:''} onChange={e=>{if(e.target.value)setRole(e.target.value);}}><option value="">Custom role / position</option>{ROLE_OPTIONS.map(option=><option key={option} value={option}>{option}</option>)}</select></label><label>Role / Position<input maxLength={100} value={role} onChange={e=>setRole(e.target.value)} placeholder="e.g. Community Manager"/></label><label>In-game Name<input maxLength={80} value={name} onChange={e=>setName(e.target.value)} placeholder="Enter Minecraft username"/></label><label>Picture (PNG, JPG, WebP · max 3 MB)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>setImage(e.target.files?.[0]||null)}/></label><label>Link an existing website user (optional)<input value={search} onChange={e=>{setSearch(e.target.value);setLinked(null);}} placeholder="Search username..."/></label>{linked&&<div className="sb-staff-linked">Linked to @{linked.username} <button onClick={()=>{setLinked(null);setSearch('');}}>Unlink</button></div>}{search.trim().length>=2&&!linked&&<div className="sb-staff-results">{candidates.map(c=><button key={c.id} onClick={()=>{setLinked(c);setSearch(c.username);setCandidates([]);}}>@{c.username}</button>)}{!candidates.length&&<span>No matching users</span>}</div>}<div className="sb-staff-actions"><button disabled={busy} onClick={()=>setOpen(false)}>Cancel</button><button className="sb-staff-button" disabled={busy} onClick={()=>void save()}>{busy?'Saving...':'Save Staff'}</button></div></div></div>}
  </section>;
 }
