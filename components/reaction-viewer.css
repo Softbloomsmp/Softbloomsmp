@@ -1,0 +1,14 @@
+.sb-react-view{display:inline-flex;position:relative;vertical-align:middle}
+.sb-react-view-trigger{border:1px solid #f0ccdd;border-radius:999px;padding:5px 10px;background:#fff5fa;color:#9c3972;cursor:pointer;font:inherit;font-size:12px;font-weight:650}
+.sb-react-view-trigger:hover,.sb-react-view-trigger:focus-visible{background:#fce5f0}
+.sb-react-view-popover{position:absolute;z-index:150;left:0;bottom:calc(100% + 7px);width:min(270px,80vw);max-height:290px;display:flex;flex-direction:column;gap:8px;background:#fffafa;border:1px solid #efc7da;border-radius:15px;box-shadow:0 10px 30px #6430493b;padding:12px;color:#4a3140}
+.sb-react-view-title{font-size:13px;font-weight:800}
+.sb-react-view-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0}
+.sb-react-view-person{display:flex;align-items:center;gap:8px;text-decoration:none!important;color:#4a3140!important;border-radius:9px;padding:5px}
+.sb-react-view-person:hover{background:#fff0f7}
+.sb-react-view-person img,.sb-react-view-avatar{width:26px;height:26px;flex:none;border-radius:50%;object-fit:cover}
+.sb-react-view-avatar{display:grid;place-items:center;background:#f6dce9}
+.sb-react-view-name{font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-react-view-emoji{font-size:17px}
+.sb-react-view-loading{font-size:12px;color:#8e7180}
+@media(max-width:600px){.sb-react-view-popover{left:auto;right:0}}

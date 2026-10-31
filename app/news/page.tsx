@@ -5,6 +5,7 @@ import {Image as ImageIcon,Video,Pencil,Trash2,Send} from 'lucide-react';
 import {supabase} from '@/lib/supabase';
 import {useAuth,Avatar} from '@/components/AppShell';
 import Link from 'next/link';
+import ReactionViewer from '@/components/ReactionViewer';
 
 type News={id:string;author_id:string;title:string;body:string;media_url:string|null;media_type:string|null;created_at:string;updated_at:string};
 type Comment={id:string;news_id:string;user_id:string;body:string;created_at:string;parent_id:string|null};
@@ -33,7 +34,7 @@ export default function NewsPage(){
   ]);
   if(n.error){setError(n.error.message);return}
   setNews((n.data||[]) as News[]);setComments((c.data||[]) as Comment[]);setReactions((r.data||[]) as Reaction[]);if(cr.error)setError(cr.error.message);else setCommentReactions((cr.data||[]) as CommentReaction[]);
-  const ids=[...new Set([...(n.data||[]).map(x=>x.author_id),...(c.data||[]).map(x=>x.user_id)])];
+  const ids=[...new Set([...(n.data||[]).map(x=>x.author_id),...(c.data||[]).map(x=>x.user_id),...(r.data||[]).map(x=>x.user_id),...(cr.data||[]).map(x=>x.user_id)])];
   if(ids.length){const p=await supabase.from('profiles').select('id,username,avatar_url').in('id',ids);setNames(Object.fromEntries((p.data||[]).map(x=>[x.id,x.username])));setAvatars(Object.fromEntries((p.data||[]).map(x=>[x.id,x.avatar_url])))}
  },[]);
  useEffect(()=>{void load();const timer=setInterval(()=>void load(),60000);return()=>clearInterval(timer)},[load]);
@@ -76,7 +77,7 @@ export default function NewsPage(){
    <div className="sb-news-comment-author"><Link href={`/profile/${c.user_id}`}><Avatar profile={{avatar_url:avatars[c.user_id]||null} as Parameters<typeof Avatar>[0]['profile']} size={30}/></Link><div><Link href={`/profile/${c.user_id}`}><strong>@{names[c.user_id]||'Member'}</strong></Link><span className="sb-news-meta"> · {new Date(c.created_at).toLocaleString()}</span></div></div>
    <p className="sb-news-body">{c.body}</p>
    <div className="sb-news-comment-controls">{pickerButton(c.id,'comment',selected,e=>void reactComment(c.id,e))}<button type="button" onClick={()=>setReplyTo(v=>v===c.id?null:c.id)}>Reply</button>{(admin||c.user_id===user?.id)&&<button type="button" onClick={async()=>{if(!confirm('Delete this comment and its replies?'))return;const r=await supabase.from('bloom_news_comments').delete().eq('id',c.id);if(r.error)setError(r.error.message);else await load()}}>Delete</button>}</div>
-   <div className="sb-news-reaction-counts">{EMOJIS.filter(e=>commentReactions.some(r=>r.comment_id===c.id&&r.emoji===e)).map(e=><span key={e}>{e} {commentReactions.filter(r=>r.comment_id===c.id&&r.emoji===e).length}</span>)}</div>
+   <div className="sb-news-reaction-counts">{EMOJIS.filter(e=>commentReactions.some(r=>r.comment_id===c.id&&r.emoji===e)).map(e=><span key={e}>{e} {commentReactions.filter(r=>r.comment_id===c.id&&r.emoji===e).length}</span>)}</div><ReactionViewer reactions={commentReactions.filter(r=>r.comment_id===c.id)} label={`👥 ${commentReactions.filter(r=>r.comment_id===c.id).length} reacted`}/>
    {replyTo===c.id&&<div className="sb-news-reply-input"><input aria-label={`Reply to ${names[c.user_id]||'member'}`} placeholder={`Reply to @${names[c.user_id]||'member'}...`} maxLength={2000} value={commentDraft[c.id]||''} onChange={e=>setCommentDraft(p=>({...p,[c.id]:e.target.value}))}/><button disabled={busy||!commentDraft[c.id]?.trim()} onClick={()=>void comment(postId,c.id)}><Send size={16}/></button></div>}
    {children.length>0&&<button type="button" className="sb-news-thread-toggle" aria-expanded={!!visibleReplies[c.id]} onClick={()=>setVisibleReplies(prev=>({...prev,[c.id]:!prev[c.id]}))}>{visibleReplies[c.id]?'Hide Replies':`View Replies (${children.length})`}</button>}
    {visibleReplies[c.id]&&children.map(child=>renderComment(child,depth+1,postId))}
@@ -92,7 +93,7 @@ export default function NewsPage(){
    <p className="sb-news-body">{n.body}</p>
    {n.media_url&&(n.media_type==='video'?<video className="sb-news-media" src={n.media_url} controls preload="metadata"/>:<img className="sb-news-media" src={n.media_url} alt={`Media for ${n.title}`} loading="lazy"/>)}
    {admin&&<div className="sb-news-actions"><button onClick={()=>startEdit(n)}><Pencil size={14}/> Edit</button><button disabled={busy} onClick={()=>void remove(n.id)}><Trash2 size={14}/> Delete</button></div>}
-   <div className="sb-news-post-reactions">{pickerButton(n.id,'post',reactions.find(r=>r.news_id===n.id&&r.user_id===user?.id)?.emoji,e=>{setPicker(null);void react(n.id,e)})}<div className="sb-news-reaction-counts">{EMOJIS.filter(e=>reactions.some(r=>r.news_id===n.id&&r.emoji===e)).map(e=><span key={e}>{e} {reactions.filter(r=>r.news_id===n.id&&r.emoji===e).length}</span>)}</div></div>
+   <div className="sb-news-post-reactions">{pickerButton(n.id,'post',reactions.find(r=>r.news_id===n.id&&r.user_id===user?.id)?.emoji,e=>{setPicker(null);void react(n.id,e)})}<div className="sb-news-reaction-counts">{EMOJIS.filter(e=>reactions.some(r=>r.news_id===n.id&&r.emoji===e)).map(e=><span key={e}>{e} {reactions.filter(r=>r.news_id===n.id&&r.emoji===e).length}</span>)}</div><ReactionViewer reactions={reactions.filter(r=>r.news_id===n.id)} label={`👥 ${reactions.filter(r=>r.news_id===n.id).length} reacted`}/></div>
    <button type="button" className="sb-news-thread-toggle sb-news-comments-toggle" aria-expanded={!!visibleComments[n.id]} onClick={()=>setVisibleComments(prev=>({...prev,[n.id]:!prev[n.id]}))}>{visibleComments[n.id]?'Hide Comments':`View Comments (${comments.filter(c=>c.news_id===n.id).length})`}</button>
    {visibleComments[n.id]&&comments.filter(c=>c.news_id===n.id&&!c.parent_id).map(c=>renderComment(c,0,n.id))}
    <div style={{display:'flex',gap:8,marginTop:12}}><input aria-label="Write a comment" placeholder={`Comment as @${profile?.username||'member'}...`} maxLength={2000} value={commentDraft[n.id]||''} onChange={e=>setCommentDraft(p=>({...p,[n.id]:e.target.value}))}/><div className="sb-news-actions"><button disabled={busy||!commentDraft[n.id]?.trim()} onClick={()=>void comment(n.id)}><Send size={16}/></button></div></div>
