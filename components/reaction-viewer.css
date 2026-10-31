@@ -12,3 +12,9 @@
 .sb-react-view-emoji{font-size:17px}
 .sb-react-view-loading{font-size:12px;color:#8e7180}
 @media(max-width:600px){.sb-react-view-popover{left:auto;right:0}}
+
+/* Keep reaction totals and viewer adjacent, never spaced across the row. */
+.sb-reaction-inline{display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;flex-wrap:wrap;min-width:0}
+.sb-news-post-reactions{justify-content:flex-start;gap:7px}
+.sb-news-post-reactions .sb-news-reaction-counts{flex:0 0 auto}
+.sb-reaction-inline .sb-react-view{flex:0 0 auto}
