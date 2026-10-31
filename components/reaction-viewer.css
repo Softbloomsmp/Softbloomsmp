@@ -18,4 +18,7 @@
 .sb-news-post-reactions{justify-content:flex-start;gap:7px}
 .sb-news-post-reactions .sb-news-reaction-counts{flex:0 0 auto}
 .sb-reaction-inline .sb-react-view{flex:0 0 auto}
-\n/* Keep reaction list usable while hovering, scrolling or tapping. */\n.sb-react-view-popover{pointer-events:auto;overscroll-behavior:contain}\n.sb-react-view-list{overscroll-behavior:contain;touch-action:pan-y}\n
+
+/* Keep reaction list usable while hovering, scrolling or tapping. */
+.sb-react-view-popover{pointer-events:auto;overscroll-behavior:contain}
+.sb-react-view-list{overscroll-behavior:contain;touch-action:pan-y}
