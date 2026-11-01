@@ -22,3 +22,6 @@
 /* Keep reaction list usable while hovering, scrolling or tapping. */
 .sb-react-view-popover{pointer-events:auto;overscroll-behavior:contain}
 .sb-react-view-list{overscroll-behavior:contain;touch-action:pan-y}
+
+.sb-react-view-popover{pointer-events:auto;overscroll-behavior:contain}
+.sb-react-view-list{overscroll-behavior:contain;touch-action:pan-y}

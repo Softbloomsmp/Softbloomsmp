@@ -12,7 +12,7 @@ export default function ReactionViewer({reactions,label='See who reacted'}:{reac
  const rootRef=useRef<HTMLSpanElement|null>(null);
  const cancelClose=()=>{if(closeTimer.current!==null){clearTimeout(closeTimer.current);closeTimer.current=null;}};
  const show=()=>{cancelClose();setOpen(true);};
- const delayClose=()=>{cancelClose();closeTimer.current=setTimeout(()=>{setOpen(false);closeTimer.current=null;},1500);};
+ const delayClose=()=>{cancelClose();closeTimer.current=setTimeout(()=>{setOpen(false);closeTimer.current=null;},500);};
  useEffect(()=>{
   const onOutside=(event:PointerEvent)=>{
    if(rootRef.current&&!rootRef.current.contains(event.target as Node))delayClose();
