@@ -104,14 +104,22 @@ export function Feed({onlyUser}:{onlyUser?:string}){
  },[user,posts]);
  function start(post?:Post){setEditing(post||null);setBody(post?.body||'');setFile(null);setRemoveMedia(false);setError('');setComposer(true)}
  function chooseFile(f?:File){if(!f)return;const image=f.type.startsWith('image/'),video=f.type.startsWith('video/');if(!image&&!video){setError('Only images and videos are allowed.');return}if(f.size>(image?3:10)*1024*1024){setError(`${image?'Images':'Videos'} must be ${image?'3':'10'} MB or less.`);return}setFile(f);setRemoveMedia(false);setError('')}
- async function save(){if(!user)return;setBusy(true);setError('');try{let media_url=editing?.media_url||null,media_type=editing?.media_type||null;if(file){const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Please sign in again.');const res=await fetch('/api/media',{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`,'Content-Type':'application/json'},body:JSON.stringify({type:file.type,size:file.size})});
+ async function save(){if(!user)return;setBusy(true);setError('');try{let media_url=editing?.media_url||null,media_type=editing?.media_type||null;if(file){const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Please sign in again.');if(file.size<=4*1024*1024){
+ const form=new FormData();form.set('file',file);
+ const response=await fetch('/api/media',{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`},body:form});
+ const raw=await response.text();let result:{error?:string;url?:string;type?:'image'|'video'};
+ try{result=JSON.parse(raw)}catch{throw new Error(`Media server returned an unexpected response (${response.status}).`)}
+ if(!response.ok||!result.url||!result.type)throw new Error(result.error||'Media upload failed.');
+ media_url=result.url;media_type=result.type;
+}else{
+const res=await fetch('/api/media',{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`,'Content-Type':'application/json'},body:JSON.stringify({type:file.type,size:file.size})});
 let out:{error?:string;path?:string;token?:string;url?:string;type?:'image'|'video'}={};
 const responseText=await res.text();
 try{out=JSON.parse(responseText)}catch{throw new Error(res.status===413?'Upload request rejected: file too large.':'Could not prepare upload. Please try again.')}
 if(!res.ok||!out.path||!out.token||!out.url)throw new Error(out.error||'Could not prepare upload.');
 const {error:uploadError}=await supabase.storage.from('post-media').uploadToSignedUrl(out.path,out.token,file,{contentType:file.type,upsert:false});
 if(uploadError)throw new Error(`Media upload failed: ${uploadError.message}`);
-media_url=out.url;media_type=out.type|| (file.type.startsWith('image/')?'image':'video')}else if(removeMedia){media_url=null;media_type=null}if(!body.trim()&&!media_url)throw new Error('Add some text or an attachment.');const payload={body:body.trim(),media_url,media_type};const result=editing?await supabase.from('posts').update(payload).eq('id',editing.id).eq('user_id',user.id):await supabase.from('posts').insert({...payload,user_id:user.id});if(result.error)throw result.error;setComposer(false);await load()}catch(e){setError(e instanceof Error?e.message:'Could not save post')}finally{setBusy(false)}}
+media_url=out.url;media_type=out.type|| (file.type.startsWith('image/')?'image':'video');}}else if(removeMedia){media_url=null;media_type=null}if(!body.trim()&&!media_url)throw new Error('Add some text or an attachment.');const payload={body:body.trim(),media_url,media_type};const result=editing?await supabase.from('posts').update(payload).eq('id',editing.id).eq('user_id',user.id):await supabase.from('posts').insert({...payload,user_id:user.id});if(result.error)throw result.error;setComposer(false);await load()}catch(e){setError(e instanceof Error?e.message:'Could not save post')}finally{setBusy(false)}}
  async function togglePin(p:Post){if(!isAdmin)return;const pinned=Boolean((p as Post & {is_pinned?:boolean}).is_pinned);const {error}=await supabase.rpc('bloom_set_post_pin',{p_post_id:p.id,p_pinned:!pinned});if(error)alert(error.message);else await load()}
  async function deletePost(p:Post){if(!user||!confirm('Delete this post and all its comments and reactions?'))return;const {error}=await supabase.from('posts').delete().eq('id',p.id).eq('user_id',user.id);if(error)alert(error.message);else await load()}
  async function react(p:Post,emoji:string){if(!user){void login('google');return}const mine=(reactions[p.id]||[]).find(r=>r.user_id===user.id);const result=mine?.emoji===emoji?await supabase.from('reactions').delete().eq('post_id',p.id).eq('user_id',user.id):await supabase.from('reactions').upsert({post_id:p.id,user_id:user.id,emoji},{onConflict:'post_id,user_id'});if(result.error)alert(result.error.message);else await load()}
