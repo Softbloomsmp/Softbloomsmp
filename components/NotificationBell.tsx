@@ -13,7 +13,7 @@ export function NotificationBell({userId}:{userId:string|null}){
  const load=useCallback(async()=>{
   if(!userId){setItems([]);setUnread(0);return}
   const {data,error}=await supabase.from('notifications').select('id,actor_id,kind,post_id,post_owner_id,comment_id,photo_id,photo_comment_id,created_at,read_at').eq('recipient_id',userId).order('created_at',{ascending:false}).limit(80);
-  if(error){setError(error.message);return}
+  if(error){setError(`Could not load notifications: ${error.message}`);return}
   const rows=(data||[]) as Notice[];
   const {count}=await supabase.from('notifications').select('id',{head:true,count:'exact'}).eq('recipient_id',userId).is('read_at',null);
   if(count!==null)setUnread(count);
@@ -22,7 +22,7 @@ export function NotificationBell({userId}:{userId:string|null}){
   const map=new Map((people||[]).map(p=>[p.id,p]));
   setItems(rows.map(n=>({...n,actor:map.get(n.actor_id)||null})));setError('');
  },[userId]);
- useEffect(()=>{void load();const timer=window.setInterval(()=>{if(document.visibilityState==='visible')void load()},10000);const onFocus=()=>void load();window.addEventListener('focus',onFocus);return()=>{window.clearInterval(timer);window.removeEventListener('focus',onFocus)}},[load]);
+ useEffect(()=>{void load();const timer=window.setInterval(()=>{if(document.visibilityState==='visible')void load()},10000);const onFocus=()=>void load();window.addEventListener('focus',onFocus);document.addEventListener('visibilitychange',onFocus);return()=>{window.clearInterval(timer);window.removeEventListener('focus',onFocus);document.removeEventListener('visibilitychange',onFocus)}},[load]);
  useEffect(()=>{const listener=(e:MouseEvent)=>{if(ref.current&&!ref.current.contains(e.target as Node))setOpen(false)};document.addEventListener('mousedown',listener);return()=>document.removeEventListener('mousedown',listener)},[]);
  async function mark(id:string){if(!userId)return;const {error}=await supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('id',id).eq('recipient_id',userId);if(!error){setItems(old=>old.map(n=>n.id===id?{...n,read_at:new Date().toISOString()}:n));setUnread(v=>Math.max(0,v-1))}else setError(error.message)}
  async function markAll(){if(!userId||!unread)return;const {error}=await supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('recipient_id',userId).is('read_at',null);if(error)setError(error.message);else{setItems(old=>old.map(n=>({...n,read_at:n.read_at||new Date().toISOString()})));setUnread(0)}}
