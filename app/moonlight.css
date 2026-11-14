@@ -159,3 +159,6 @@ html[data-sb-theme="dark"] input::placeholder,html[data-sb-theme="dark"] textare
 html[data-sb-theme="dark"] ::-webkit-scrollbar{width:10px;height:10px}html[data-sb-theme="dark"] ::-webkit-scrollbar-thumb{background:#65466d;border-radius:10px}html[data-sb-theme="dark"] ::-webkit-scrollbar-track{background:#1b1425}
 .sb-appearance{border:1px solid var(--border);border-radius:16px;padding:16px;display:grid;gap:8px}.sb-appearance h2{margin:0;font-size:18px}.sb-theme-switch{display:flex;align-items:center;gap:12px;justify-content:space-between}.sb-theme-switch input{appearance:auto;width:22px;height:22px;accent-color:var(--pink)}
 @media(prefers-reduced-motion:no-preference){body,.panel,.topbar,.btn,.field{transition:background-color .25s,color .25s,border-color .25s}}
+
+/* Keep actual attachments independent of theme surface styling. */
+html .sb-post-attachment{min-width:0;width:100%;overflow:hidden}html .sb-post-attachment video{display:block;width:100%;max-width:100%;min-height:0;max-height:min(500px,75vh);object-fit:contain;opacity:1!important;visibility:visible!important;filter:none!important;background:#141018!important}html .sb-post-attachment img{display:block;width:100%;height:auto;max-width:100%;object-fit:contain;opacity:1!important;visibility:visible!important;filter:none!important}

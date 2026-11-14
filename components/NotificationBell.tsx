@@ -4,15 +4,15 @@ import Link from 'next/link';
 import {Bell,CheckCheck,Trash2} from 'lucide-react';
 import {supabase} from '@/lib/supabase';
 
-type Notice={id:string;actor_id:string;kind:string;post_id:string|null;post_owner_id:string|null;comment_id:string|null;created_at:string;read_at:string|null;actor?:{username:string;avatar_url:string|null}|null};
-const labels:Record<string,string>={post_reaction:'reacted to your post',comment:'commented on your post',reply:'replied to your comment',comment_reaction:'reacted to your comment',message:'sent you a message',follow:'started following you'};
+type Notice={id:string;actor_id:string;kind:string;post_id:string|null;post_owner_id:string|null;comment_id:string|null;photo_id:string|null;photo_comment_id:string|null;created_at:string;read_at:string|null;actor?:{username:string;avatar_url:string|null}|null};
+const labels:Record<string,string>={post_reaction:'reacted to your post',comment:'commented on your post',reply:'replied to your comment',comment_reaction:'reacted to your comment',message:'sent you a message',follow:'started following you',profile_photo_comment:'commented on your profile picture',cover_photo_comment:'commented on your cover photo',profile_photo_reply:'replied to your comment on a photo'};
 export function NotificationBell({userId}:{userId:string|null}){
  const [items,setItems]=useState<Notice[]>([]),[open,setOpen]=useState(false),[error,setError]=useState(''),[unread,setUnread]=useState(0),[clearing,setClearing]=useState(false);
  const ref=useRef<HTMLDivElement>(null);
  useEffect(()=>{const close=()=>setOpen(false);window.addEventListener('softbloom:close-notifications',close);return()=>window.removeEventListener('softbloom:close-notifications',close)},[]);
  const load=useCallback(async()=>{
   if(!userId){setItems([]);setUnread(0);return}
-  const {data,error}=await supabase.from('notifications').select('id,actor_id,kind,post_id,post_owner_id,comment_id,created_at,read_at').eq('recipient_id',userId).order('created_at',{ascending:false}).limit(80);
+  const {data,error}=await supabase.from('notifications').select('id,actor_id,kind,post_id,post_owner_id,comment_id,photo_id,photo_comment_id,created_at,read_at').eq('recipient_id',userId).order('created_at',{ascending:false}).limit(80);
   if(error){setError(error.message);return}
   const rows=(data||[]) as Notice[];
   const {count}=await supabase.from('notifications').select('id',{head:true,count:'exact'}).eq('recipient_id',userId).is('read_at',null);
@@ -42,7 +42,7 @@ export function NotificationBell({userId}:{userId:string|null}){
  <div className="sb-notification-head"><strong>Notifications 🌸</strong><div style={{display:"flex",gap:9,alignItems:"center",flexWrap:"wrap"}}><button type="button" onClick={()=>void markAll()} disabled={!unread||clearing} title="Mark all as read"><CheckCheck size={16}/> Mark read</button><button type="button" onClick={()=>void clearAll()} disabled={!items.length||clearing} title="Permanently clear all notifications"><Trash2 size={16}/> {clearing?"Clearing…":"Clear all"}</button></div></div>
  {error&&<p className="error">{error}</p>}
  {!items.length&&!error&&<p className="muted" style={{padding:18}}>No notifications yet.</p>}
- <div className="sb-notification-list">{items.map(n=><Link key={n.id} className={`sb-notification-item ${n.read_at?'':'unread'}`} href={n.kind==='message'?`/messages/${n.actor_id}`:n.kind==='follow'?`/profile/${n.actor_id}`:n.post_id?`/profile/${n.post_owner_id||n.actor_id}/posts?post=${n.post_id}${n.comment_id?`&comment=${n.comment_id}`:''}`:'/'} onClick={()=>{setOpen(false);void mark(n.id)}}>
+ <div className="sb-notification-list">{items.map(n=><Link key={n.id} className={`sb-notification-item ${n.read_at?'':'unread'}`} href={n.photo_id?`/profile/${n.post_owner_id||n.actor_id}?photo=${n.photo_id}${n.photo_comment_id?`&photoComment=${n.photo_comment_id}`:''}`:n.kind==='message'?`/messages/${n.actor_id}`:n.kind==='follow'?`/profile/${n.actor_id}`:n.post_id?`/profile/${n.post_owner_id||n.actor_id}/posts?post=${n.post_id}${n.comment_id?`&comment=${n.comment_id}`:''}`:'/'} onClick={()=>{setOpen(false);if(!n.read_at)void mark(n.id)}}>
  <span className="sb-notification-dot">{n.read_at?'':'●'}</span><span><strong>{n.actor?.username||'A member'}</strong> {labels[n.kind]||'interacted with you'}<small>{new Date(n.created_at).toLocaleString()}</small></span></Link>)}</div>
  </section>}</div>;
 }

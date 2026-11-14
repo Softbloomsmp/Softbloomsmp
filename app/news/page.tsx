@@ -1,4 +1,5 @@
 'use client';
+import PostMedia from '@/components/PostMedia';
 import {useCallback,useEffect,useState,useRef} from 'react';
 import {createPortal} from 'react-dom';
 import {Image as ImageIcon,Video,Pencil,Trash2,Send} from 'lucide-react';
@@ -91,7 +92,7 @@ export default function NewsPage(){
   {news.map(n=><article className="sb-news-card" key={n.id}>
    <div className="sb-news-author"><Link href={`/profile/${n.author_id}`} className="sb-news-author-avatar" aria-label={`View @${names[n.author_id]||'member'} profile`}><Avatar profile={{avatar_url:avatars[n.author_id]||null} as Parameters<typeof Avatar>[0]["profile"]} size={44}/></Link><div className="sb-news-author-details"><Link href={`/profile/${n.author_id}`} className="sb-news-author-name">@{names[n.author_id]||'Member'}</Link><div className="sb-news-meta">{new Date(n.created_at).toLocaleString()}{n.updated_at!==n.created_at?' · Edited':''}</div></div></div><h2>{n.title}</h2>
    <p className="sb-news-body">{n.body}</p>
-   {n.media_url&&(n.media_type==='video'?<video className="sb-news-media" src={n.media_url} controls preload="metadata"/>:<img className="sb-news-media" src={n.media_url} alt={`Media for ${n.title}`} loading="lazy"/>)}
+   {n.media_url&&<PostMedia key={n.media_url} url={n.media_url} type={n.media_type} className="sb-news-media" alt={`Media for ${n.title}`}/>}
    {admin&&<div className="sb-news-actions"><button onClick={()=>startEdit(n)}><Pencil size={14}/> Edit</button><button disabled={busy} onClick={()=>void remove(n.id)}><Trash2 size={14}/> Delete</button></div>}
    <div className="sb-news-post-reactions">{pickerButton(n.id,'post',reactions.find(r=>r.news_id===n.id&&r.user_id===user?.id)?.emoji,e=>{setPicker(null);void react(n.id,e)})}<div className="sb-news-reaction-counts">{EMOJIS.filter(e=>reactions.some(r=>r.news_id===n.id&&r.emoji===e)).map(e=><span key={e}>{e} {reactions.filter(r=>r.news_id===n.id&&r.emoji===e).length}</span>)}</div><ReactionViewer reactions={reactions.filter(r=>r.news_id===n.id)} label={`👥 ${reactions.filter(r=>r.news_id===n.id).length} reacted`}/></div>
    <button type="button" className="sb-news-thread-toggle sb-news-comments-toggle" aria-expanded={!!visibleComments[n.id]} onClick={()=>setVisibleComments(prev=>({...prev,[n.id]:!prev[n.id]}))}>{visibleComments[n.id]?'Hide Comments':`View Comments (${comments.filter(c=>c.news_id===n.id).length})`}</button>
