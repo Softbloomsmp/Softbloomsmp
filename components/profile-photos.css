@@ -13,6 +13,6 @@
 .sb-photo-discussion .sb-photo-picker-slide .react-btn{flex:none;padding:4px;min-width:0}
 .sb-cover-preview{height:220px;overflow:hidden;border-radius:16px;touch-action:none;cursor:grab;background:#fceaf5}
 .sb-cover-preview:active{cursor:grabbing}.sb-cover-preview img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none}
-.sb-cover-position label{display:grid;gap:4px;margin:8px 0}.sb-cover-position input{width:100%}
+.sb-cover-preview:focus-visible{outline:2px solid #b74783;outline-offset:3px}
 @media(max-width:700px){.sb-photo-modal{grid-template-rows:minmax(0,40%) minmax(0,1fr);height:100dvh}.sb-cover-preview{height:165px}}
 @media(prefers-reduced-motion:reduce){.sb-photo-discussion .sb-photo-picker-slide{transition:none}}
